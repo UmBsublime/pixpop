@@ -1,0 +1,27 @@
+RenameDialog {
+    align: center middle;
+
+    #rename-dialog {
+        width: 50;
+        height: auto;
+        padding: 1 2;
+        border: round $primary;
+        background: $panel;
+    }
+
+    #rename-title {
+        text-style: bold;
+        margin-bottom: 1;
+    }
+
+    .rename-input {
+        width: 1fr;
+    }
+
+    #rename-hint {
+        width: 1fr;
+        margin-top: 1;
+        color: $text-muted;
+        text-align: center;
+    }
+}
