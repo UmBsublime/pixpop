@@ -1,0 +1,254 @@
+* {
+    scrollbar-size: 1 1;
+}
+
+Header {
+    color: $accent-lighten-1;
+    text-style: bold;
+
+}
+
+Tooltip {
+    color: $text-muted;
+    border: thick $accent;
+    padding-left: 2;
+    padding-right: 2;
+}
+
+PaintCanvas {
+    border-bottom: thick $primary;
+    padding-left: 1;
+    padding-right: 1;
+
+    background: $panel;
+    height: 1fr;
+    width: 1fr;
+    min-width: 4;
+    min-height: 4;
+}
+
+PickerColumn {
+    width: 34;
+    height: 1fr;
+    border-bottom: thick $primary;
+    border-right: thick $primary;
+    border-left: thick $primary;
+    background: $panel;
+    color: $text;
+}
+
+.picker-panel {
+    border-top: panel $primary;
+    border-title-color: $text;
+
+}
+
+.picker-panel.invisible {
+    visibility: hidden;
+    height: 0;
+    border: none;
+    padding-bottom: 0;
+}
+
+CanvasTabs {
+    width: 1fr;
+}
+
+
+ColorPicker {
+    .palette-select {
+        margin-bottom: 1;
+        margin-top: 1;
+    }
+
+    .recent-section.invisible {
+        visibility: hidden;
+        height: 0;
+        border: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .recent-grid {
+        height: auto;
+        grid-size: 8;
+        border-top: panel $primary;
+    }
+
+    .color-grid {
+        height: auto;
+        grid-size: 8;
+    }
+}
+
+ToolPicker {
+    border-top: double white;
+
+    .tool-grid {
+        height: auto;
+        grid-size: 4;
+    }
+}
+
+ToolPicker .value-button {
+    color: $text;
+    &.-selected {
+        background: $accent;
+    }
+}
+
+LayerPicker {
+    border-top: double white;
+
+    .layer-panel {
+        height: auto;
+    }
+
+    .layer-list {
+        height: auto;
+    }
+
+    .layer-row {
+        height: 1;
+    }
+
+    ListItem {
+        background: $panel;
+    }
+
+    .layer-visible-indicator {
+        max-width: 3;
+        color: $text-muted;
+        background: transparent;
+        border: none;
+        margin: 0 1;
+    }
+
+    .layer-visible-indicator.-visible {
+        color: $success;
+    }
+
+    .layer-visible-indicator.-hidden {
+        color: $error;
+    }
+
+    ListItem.active-layer {
+        background: $accent;
+        color: $text;
+    }
+
+}
+
+CanvasInfo {
+    border-top: tab $accent;
+    border-title-color: $text;
+    height: auto;
+    padding: 0 1;
+    dock: bottom;
+}
+
+BrushSizePicker {
+    border-top: double white;
+
+    .brush-grid {
+        height: auto;
+        grid-size: 5;
+    }
+}
+
+BrushSizePicker .value-button {
+    width: auto;
+    padding: 0 2;
+    color: $text;
+    &.-selected {
+        background: $accent;
+    }
+}
+
+SprayDensityPicker {
+
+    .spray-grid {
+        height: auto;
+        grid-size: 5;
+    }
+}
+
+SprayDensityPicker .value-button {
+    width: auto;
+    padding: 0 2;
+
+    &.-selected {
+        background: $accent;
+        color: $text;
+    }
+}
+
+NormalizedPicker {
+    .normalized-panel {
+        height: auto;
+    }
+
+    .normalized-row {
+        height: 1;
+    }
+
+    .normalized-indicator {
+        max-width: 5;
+        color: $text-muted;
+        background: transparent;
+        border: none;
+        margin: 0 0;
+        padding: 0 1;
+    }
+
+    .normalized-indicator.-enabled {
+        color: $success;
+    }
+
+    .normalized-indicator.-disabled {
+        color: $error;
+    }
+}
+
+FlipPicker {
+    border-top: double white;
+
+    .flip-panel {
+        height: auto;
+    }
+
+    .flip-row {
+        height: 1;
+    }
+
+    .flip-indicator {
+        max-width: 5;
+        color: $accent;
+        background: transparent;
+        border: none;
+        margin: 0 0;
+        padding: 0 1;
+    }
+}
+
+TabbedContent {
+    border-top: thick $primary;
+    border-right: thick $primary;
+    height: 1fr;
+    width: 1fr;
+    background: $panel;
+
+    & > ContentSwitcher {
+        height: 1fr;
+
+    }
+}
+
+Tab {
+    margin-left: 1;
+    color: $text;
+    &.-active {
+        background: $accent;
+
+    }
+}

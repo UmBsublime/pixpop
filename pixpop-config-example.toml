@@ -1,0 +1,19 @@
+max_layers = 10
+min_canvas_width = 4
+min_canvas_height = 4
+#default_canvas_width = 128
+#default_canvas_height = 128
+#max_canvas_width = 1024
+#max_canvas_height = 1024
+default_palette_name = "default"
+checker_size_width = 8
+checker_size_height = 8
+# Options: solic/checker
+background_mode = "checker"
+# Only works when background_mode=solid
+background_color = "#2b2b2b"
+checker_color_a = "#2b2b2b"
+checker_color_b = "#313131"
+recent_colors_max = 8
+undo_max_entries = 50
+theme_name = "twilight-bog"

@@ -1,0 +1,103 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.venv",
+    "/.venv-linux",
+    "/.pytest_cache",
+    "/.ruff_cache",
+    "/.idea",
+    "/snapshot_report.html",
+    "/textual.log",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixpop"]
+# Bundle the shared asset files (word lists, palettes) that live at
+# src/assets/ outside the package directory.
+force-include = { "src/assets" = "pixpop/assets" }
+exclude = [
+    "/.venv",
+    "/.venv-linux",
+    "/.pytest_cache",
+    "/.ruff_cache",
+    "/.idea",
+    "/snapshot_report.html",
+    "/textual.log",
+]
+
+[project]
+name = "pixpop"
+version = "0.1.0"
+description = "A TUI paint application built with Python and the Textual framework"
+readme = "README.md"
+requires-python = ">=3.14"
+license = {text = "MIT"}
+license-files = ["LICENSE"]
+dependencies = [
+    "pillow>=12.3.0",
+    "textual-fspicker>=1.0.1",
+    "textual>=8.2.8",
+    "textual-canvas>=1.1.0",
+]
+authors = [
+    {name = "umbsublime"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Multimedia :: Graphics :: Editors",
+]
+
+[project.urls]
+Repository = "https://github.com/umbsublime/pixpop"
+
+[dependency-groups]
+dev = [
+    "pytest-textual-snapshot>=1.1.0",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.16.9",
+    "textual-dev>=1.8.0",
+]
+
+[project.scripts]
+pixpop = "pixpop.app:main"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E501",  # line too long, handled by the formatter
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+addopts = "-n 4"
+markers = [
+    "canvas: canvas UI snapshots",
+    "colors: color picker snapshots",
+    "functional: multi-step functional scenarios",
+    "layers: layer UI snapshots",
+    "tools: tool UI snapshots",
+]
+
+
