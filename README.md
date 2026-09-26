@@ -1,9 +1,11 @@
 ﻿# Pixpop
 
-![pixpop logo](assets/pixpop_x4.png)
+![pixpop logo](screenshots/pixpop_x4.png)
 
 A TUI paint application built with Python 3.14 and the
 [Textual](https://textual.textualize.io/) framework.
+
+**[Documentation](https://umbsublime.github.io/pixpop/)**
 
 ## Features
 
@@ -27,8 +29,8 @@ It allows choosing the top pixel with left-click, the bottom pixel with right-cl
 
 <table>
   <tr>
-    <td><img src="assets/app.png" alt="Pixpop main window"></td>
-    <td><img src="assets/help.png" alt="Pixpop help dialog"></td>
+    <td><img src="screenshots/app.png" alt="Pixpop main window"></td>
+    <td><img src="screenshots/help.png" alt="Pixpop help dialog"></td>
   </tr>
 </table>
 
@@ -71,7 +73,7 @@ pixpop/
 │   └── importers/      # PNG / PIX / ANSI loaders
 ├── src/assets/         # Palettes and word lists (bundled)
 ├── tests/              # Snapshot + regression tests
-├── assets/             # Project logo and screenshots
+├── screenshots/         # Project logo and screenshots
 └── pyproject.toml
 ```
 

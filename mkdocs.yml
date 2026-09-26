@@ -1,0 +1,59 @@
+site_name: Pixpop
+site_description: A TUI paint application built with Python and the Textual framework
+site_url: https://umbsublime.github.io/pixpop/
+repo_url: https://github.com/UmBsublime/pixpop
+repo_name: UmBsublime/pixpop
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2026 UmBsublime
+exclude_docs: |
+  scripts/
+
+theme:
+  name: material
+  favicon: assets/images/favicon.png
+  palette:
+    scheme: twilight-bog
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+plugins:
+  - search
+
+extra_css:
+  - stylesheets/twilight-bog.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.keys
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Keyboard Shortcuts: shortcuts.md
+  - Guide:
+      - Drawing Tools: tools.md
+      - Layers: layers.md
+      - Canvases & Tabs: canvases.md
+      - Colors & Palettes: colors.md
+      - File Formats: file-formats.md
+  - Configuration: configuration.md
