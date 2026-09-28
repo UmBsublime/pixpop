@@ -11,6 +11,12 @@ exclude = [
     "/.idea",
     "/snapshot_report.html",
     "/textual.log",
+    "/omarchy.ans",
+    "/omarchy.pix",
+    "/screenshots",
+    "/docs",
+    "/site",
+    "/mkdocs.yml",
 ]
 
 [tool.hatch.build.targets.wheel]
