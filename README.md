@@ -2,8 +2,12 @@
 
 ![pixpop logo](https://raw.githubusercontent.com/UmBsublime/pixpop/main/screenshots/pixpop_x4.png)
 
-A TUI paint application built with Python 3.14 and the
-[Textual](https://textual.textualize.io/) framework.
+A TUI paint application built with the [Textual](https://textual.textualize.io/) framework.
+
+Pixpop was originally built to export pixel art as ANSI escape sequences,
+but evolved into a simple multi-layer, multi-canvas pixel drawing app.
+
+I mainly use it now to create fun images to spice up my terminal MOTD via [jestsay](https://github.com/UmBsublime/jestsay).
 
 **[Documentation](https://umbsublime.github.io/pixpop/)**
 
@@ -48,10 +52,35 @@ gzipped JSON files that capture:
 The `.pix` format is intended for restoring a working session rather than
 exporting artwork. For artwork exports, use PNG or ASCII.
 
+## Installation
 
+### Terminal requirements
 
-## Setup
+Pixpop needs two environment variables for full color support:
 
+- `TERM` must be a 256-color variant (e.g. `xterm-256color`)
+- `COLORTERM=truecolor` to enable 24-bit true color
+
+Most modern terminals (kitty, alacritty, foot, ghostty, wezterm, GNOME
+Terminal, Konsole) set these correctly out of the box. If colors look off,
+check with:
+
+```bash
+echo $TERM       # should end in -256color
+echo $COLORTERM  # should be truecolor
+```
+
+With [uv](https://docs.astral.sh/uv/) (recommended):
+```bash
+uv tool install pixpop
+```
+
+With [pipx](https://pipx.pypa.io/):
+```bash
+pipx install pixpop
+```
+
+From source:
 ```bash
 git clone https://github.com/umbsublime/pixpop.git
 cd pixpop
@@ -59,58 +88,18 @@ uv sync
 uv run pixpop
 ```
 
-## Project structure
-
-```
-pixpop/
-├── src/pixpop/         # Application package
-│   ├── styles/         # Textual CSS
-│   ├── screens/        # Modal dialogs
-│   ├── state/          # App state, messages, undo/redo
-│   ├── tools/          # Drawing tools and registry
-│   ├── widgets/        # UI pickers (tool/color/brush/spray/layer)
-│   ├── session/        # .pix session save/load
-│   └── importers/      # PNG / PIX / ANSI loaders
-├── src/assets/         # Palettes and word lists (bundled)
-├── tests/              # Snapshot + regression tests
-├── screenshots/         # Project logo and screenshots
-└── pyproject.toml
-```
-
-## Development
-
-### Code quality (Ruff)
+## Usage
 
 ```bash
-# Lint
-uv run ruff check src/
-
-# Auto-fix
-uv run ruff check --fix src/
-
-# Format
-uv run ruff format src/
+pixpop
 ```
 
-## Testing
+- Draw with the mouse (see [Caveats](#caveats) for the fine tool)
+- Press `?` for the help screen and full keybindings
+- `Ctrl+S` to save, `Ctrl+E` to export, `Ctrl+O` to load (`.ans`, `.png`, `.pix`)
+- Try to `cat` your .ans file in the terminal
 
-Snapshot tests cover the UI. Run them with:
-
-```bash
-uv run pytest
-```
-
-Update baselines for intentional UI changes:
-
-```bash
-uv run pytest --snapshot-update
-```
-
-Always verify changes by running the app:
-
-```bash
-uv run pixpop
-```
+See the [documentation](https://umbsublime.github.io/pixpop/) for details.
 
 ## Powered by
 
