@@ -1,4 +1,4 @@
-﻿# Pixpop
+# Pixpop
 
 ![pixpop logo](https://raw.githubusercontent.com/UmBsublime/pixpop/main/screenshots/pixpop_x4.png)
 
