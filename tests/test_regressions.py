@@ -20,6 +20,101 @@ from pixpop.session.exporter import _get_tab_label
 from pixpop.state.app_state import AppState
 
 
+class TestArrowKeyLayerNavigation:
+    """Arrow keys must reach the workspace's layer bindings (regression).
+
+    The scrollable canvas shadows its inherited scroll-key bindings with
+    no-ops; those no-ops must raise SkipAction so the focused canvas does
+    not swallow the workspace's up/down/left/right layer shortcuts.
+    """
+
+    @staticmethod
+    async def _make_two_layer_canvas(pilot):
+        """Return (workspace, canvas) with two layers; layer index 1 active."""
+        from pixpop.canvas import PaintCanvas
+        from pixpop.workspace import PaintWorkspace
+
+        ws = pilot.app.query_one(PaintWorkspace)
+        canvas = pilot.app.query_one(PaintCanvas)
+        assert canvas.active_layer_index == 0
+        assert ws._layer_controller.add_layer()
+        await pilot.pause()
+        assert canvas.active_layer_index == 1
+        return ws, canvas
+
+    def test_up_down_keys_cycle_active_layer(self) -> None:
+        """up/down change the active layer while the canvas has focus."""
+        import asyncio
+
+        from tests.snapshot_helpers import SnapshotPaintApp
+
+        async def main() -> tuple[int, int, int]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                _, canvas = await self._make_two_layer_canvas(pilot)
+                await pilot.press("up")
+                after_up = canvas.active_layer_index
+                await pilot.press("down")
+                after_down = canvas.active_layer_index
+                await pilot.press("down")
+                after_clamped = canvas.active_layer_index
+                return after_up, after_down, after_clamped
+
+        assert asyncio.run(main()) == (0, 1, 1)
+
+    def test_left_right_keys_move_active_layer(self) -> None:
+        """left/right reorder layers (and track the active one)."""
+        import asyncio
+
+        from tests.snapshot_helpers import SnapshotPaintApp
+
+        async def main() -> tuple[list[str], list[str], int]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                _, canvas = await self._make_two_layer_canvas(pilot)
+                await pilot.press("left")
+                after_left = [name for name, _ in canvas.get_layers()]
+                await pilot.press("right")
+                after_right = [name for name, _ in canvas.get_layers()]
+                return after_left, after_right, canvas.active_layer_index
+
+        after_left, after_right, final_index = asyncio.run(main())
+        # "Layer 2" moves toward the front on left, back again on right.
+        assert after_left == ["Layer 2", "Layer 1"]
+        assert after_right == ["Layer 1", "Layer 2"]
+        assert final_index == 1
+
+    def test_arrow_keys_never_scroll_canvas(self) -> None:
+        """On a scrollable canvas, arrows do layer nav and do not scroll."""
+        import asyncio
+
+        from tests.snapshot_helpers import SnapshotPaintApp
+
+        async def main() -> tuple[tuple[int, int], int]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(60, 30)) as pilot:
+                await pilot.pause()
+                _, canvas = await self._make_two_layer_canvas(pilot)
+                canvas.resize_preserve_content(200, 200)
+                await pilot.pause()
+                canvas.scroll_to(10, 10, animate=False)
+                await pilot.pause()
+
+                await pilot.press("up")
+                await pilot.press("left")
+                offset = (
+                    round(canvas.scroll_offset.x),
+                    round(canvas.scroll_offset.y),
+                )
+                return offset, canvas.active_layer_index
+
+        scroll_offset, active_index = asyncio.run(main())
+        assert scroll_offset == (10, 10)
+        assert active_index == 0
+
+
 class TestAppStateClone:
     def test_clone_preserves_normalized(self) -> None:
         state = AppState(normalized=True)

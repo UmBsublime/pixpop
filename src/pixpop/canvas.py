@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass, field
 from typing import ClassVar, Iterable
 
+from textual.actions import SkipAction
 from textual.binding import Binding, BindingType
 from textual.color import Color
 from textual.events import Leave, MouseDown, MouseMove, MouseUp
@@ -62,10 +63,11 @@ class Layer:
 class PaintCanvas(Canvas):
     """A canvas widget that supports drawing and erasing with mouse interactions."""
 
-    # Shadow the inherited ScrollableContainer scroll-key bindings with no-ops
-    # so they neither scroll the canvas nor swallow the workspace's arrow-key
-    # layer shortcuts. Subclass bindings replace base bindings for the same
-    # key (see DOMNode._merge_bindings). Scrolling is available only by
+    # Shadow the inherited ScrollableContainer scroll-key bindings so arrow
+    # keys never scroll the canvas. Subclass bindings replace base bindings
+    # for the same key (see DOMNode._merge_bindings). The noop action raises
+    # SkipAction, so these keys fall through the binding chain to the
+    # workspace's layer-navigation shortcuts. Scrolling is available only by
     # clicking/dragging the scrollbars; the mouse wheel is disabled below.
     BINDINGS: ClassVar[list[BindingType]] = [
         Binding(key, "noop", "", show=False)
@@ -748,7 +750,14 @@ class PaintCanvas(Canvas):
             self.resize_preserve_content(new_width, new_height)
 
     def action_noop(self) -> None:
-        """Swallow scroll keys so workspace bindings keep working."""
+        """Decline scroll keys so they fall through to workspace bindings.
+
+        Mirrors Textual's own scroll actions, which raise SkipAction when
+        scrolling isn't possible; here it is never possible via keys, so the
+        key always skips to the next namespace in the binding chain (the
+        workspace's layer shortcuts).
+        """
+        raise SkipAction()
 
     def _on_mouse_scroll_up(self, event) -> None:
         """Disable mouse-wheel scrolling; scrollbars are the only scroller."""
