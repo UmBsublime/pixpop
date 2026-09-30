@@ -36,7 +36,7 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         DEFAULT_TOOL_NAME,
         "Pen",
-        "Freehand drawing.",
+        "Freehand drawing.\n\nAlt: offset cursor down 1px",
         PenTool,
     ),
     ToolDefinition(
@@ -64,27 +64,27 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         "eraser",
         "Erase",
-        "Erase pixels.",
+        "Erase pixels.\n\nAlt: offset cursor down 1px",
         EraserTool,
     ),
     ToolDefinition(
         "rectangle",
         "Rect",
-        "Draw a rectangle.",
+        "Draw a rectangle.\n\nAlt: offset cursor down 1px",
         RectangleTool,
         max_brush_size=3,
     ),
     ToolDefinition(
         "line",
         "Line",
-        "Draw a straight line.",
+        "Draw a straight line.\n\nAlt: offset cursor down 1px",
         LineTool,
         supports_normalized=True,
     ),
     ToolDefinition(
         "circle",
         "Circle",
-        "Draw a circle.",
+        "Draw a circle.\n\nAlt: offset cursor down 1px",
         CircleTool,
         supports_normalized=True,
         max_brush_size=3,
@@ -92,7 +92,7 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
     ToolDefinition(
         "ellipse",
         "Ellipse",
-        "Draw an ellipse.",
+        "Draw an ellipse.\n\nAlt: offset cursor down 1px",
         EllipseTool,
         supports_normalized=True,
         max_brush_size=3,

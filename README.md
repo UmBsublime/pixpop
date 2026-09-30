@@ -29,6 +29,7 @@ This application is designed to draw in the terminal, which comes with limitatio
 We are able to draw `pixels` (half-characters), but there is no way to know if the mouse is positioned
 on the top or bottom pixel. To work around this we have the fine tool.
 It allows choosing the top pixel with left-click, the bottom pixel with right-click, and both pixels with middle-click.
+Alternatively, with the pen, eraser, and shape tools you can hold `Alt` to offset the cursor down by one pixel.
 
 ## Screenshots
 

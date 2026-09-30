@@ -26,6 +26,19 @@ from pixpop.tools import Tool, get_default_tool_name, instantiate_tools
 # corner instead of extending above/left and clipping.
 _TOP_LEFT_ANCHORED_SIZES = (3, 5)
 
+# Tools whose mouse cursor is offset down one pixel while Alt is held
+# (the mouse resolves to a terminal cell; Alt targets its bottom pixel).
+_ALT_OFFSET_TOOLS = frozenset(
+    {
+        ToolName.PEN,
+        ToolName.ERASER,
+        ToolName.RECTANGLE,
+        ToolName.LINE,
+        ToolName.CIRCLE,
+        ToolName.ELLIPSE,
+    }
+)
+
 # How long a space press keeps panning "armed" without further space events.
 # Held space produces auto-repeat presses well within this window; once the
 # user releases space, repeats stop and the armed state goes stale. A stale
@@ -409,6 +422,25 @@ class PaintCanvas(Canvas):
         canvas_y = (screen_y - canvas_region.y + round(self.scroll_offset.y)) * 2
         return canvas_x, canvas_y
 
+    def _mouse_canvas_coords(
+        self, event: MouseDown | MouseMove | MouseUp
+    ) -> tuple[int, int]:
+        """Convert a mouse event to canvas coordinates.
+
+        The mouse resolves to a terminal cell, whose canvas y is the top
+        pixel of that cell. When Alt is held with the pen, eraser, or a
+        shape tool active, the cursor is offset down by one pixel (the
+        bottom half of the cell), giving those tools the fine pen's
+        vertical precision. (Alt is used because many terminals do not
+        report Shift with mouse events.)
+        """
+        canvas_x, canvas_y = self.screen_to_canvas_coords(
+            int(event.screen_x), int(event.screen_y)
+        )
+        if event.meta and self._current_tool.name in _ALT_OFFSET_TOOLS:
+            canvas_y += 1
+        return canvas_x, canvas_y
+
     def is_valid_position(self, x: int, y: int) -> bool:
         """Check if coordinates are within canvas bounds."""
         return 0 <= x < self.width and 0 <= y < self.height
@@ -536,9 +568,7 @@ class PaintCanvas(Canvas):
         if self._pan_armed and event.button == BUTTON_LEFT:
             self._disarm_pan()
 
-        canvas_x, canvas_y = self.screen_to_canvas_coords(
-            int(event.screen_x), int(event.screen_y)
-        )
+        canvas_x, canvas_y = self._mouse_canvas_coords(event)
 
         # Hide cursor when starting to draw
         self.hide_cursor()
@@ -583,9 +613,7 @@ class PaintCanvas(Canvas):
             self._update_pan(event.screen_x, event.screen_y)
             return
 
-        canvas_x, canvas_y = self.screen_to_canvas_coords(
-            int(event.screen_x), int(event.screen_y)
-        )
+        canvas_x, canvas_y = self._mouse_canvas_coords(event)
 
         # Report cursor position so the workspace info panel stays in sync.
         if self.is_valid_position(canvas_x, canvas_y):
@@ -621,9 +649,7 @@ class PaintCanvas(Canvas):
             self._end_pan()
             return
 
-        canvas_x, canvas_y = self.screen_to_canvas_coords(
-            int(event.screen_x), int(event.screen_y)
-        )
+        canvas_x, canvas_y = self._mouse_canvas_coords(event)
 
         if self._is_preview_active:
             self._end_preview(canvas_x, canvas_y)

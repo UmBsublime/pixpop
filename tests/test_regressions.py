@@ -630,3 +630,251 @@ class TestBrushFootprint:
             assert count == side * side, (
                 f"size {size} painted {count}, expected {side * side}"
             )
+
+
+class TestAltCursorOffset:
+    """Holding Alt with the pen, eraser, or a shape tool offsets the cursor."""
+
+    @staticmethod
+    def _mouse_event(event_cls, canvas, x: int, y: int, meta: bool, button: int = 1):
+        """Build a mouse event targeting canvas cell (x, y)."""
+        return event_cls(
+            canvas,
+            x=x + canvas.region.x + 1,
+            y=y // 2 + canvas.region.y,
+            delta_x=0,
+            delta_y=0,
+            button=button,
+            shift=False,
+            meta=meta,
+            ctrl=False,
+        )
+
+    def test_alt_offsets_pen_cursor_down_one_pixel(self) -> None:
+        """Alt+click paints at y+1; without Alt the same cell paints at y."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "pen")
+                canvas.brush_size = 1
+
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=True)
+                )
+                canvas.on_mouse_up(self._mouse_event(MouseUp, canvas, 4, 6, meta=True))
+                await pilot.pause()
+                offset = sorted(canvas._layers[0].pixels)
+
+                canvas._layers[0].pixels.clear()
+                canvas.refresh_composite()
+
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=False)
+                )
+                canvas.on_mouse_up(
+                    self._mouse_event(MouseUp, canvas, 4, 6, meta=False)
+                )
+                await pilot.pause()
+                plain = sorted(canvas._layers[0].pixels)
+                return offset, plain
+
+        offset, plain = asyncio.run(main())
+        assert offset == [(4, 7), (4, 8)]
+        assert plain == [(4, 6), (4, 7)]
+
+    def test_alt_ignored_for_other_tools(self) -> None:
+        """Alt does not offset the cursor for fine-pen/spray/bucket."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> dict[str, list[tuple[int, int]]]:
+            app = SnapshotPaintApp()
+            results: dict[str, list[tuple[int, int]]] = {}
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                canvas.brush_size = 1
+
+                for tool in ("fine-pen", "spray", "paint_bucket"):
+                    canvas._layers[0].pixels.clear()
+                    canvas.refresh_composite()
+                    # Seed a background so the bucket has something to fill.
+                    for y in range(4, 14):
+                        canvas.set_layer_pixel(4, y, canvas.pen_color)
+                    await select_tool(pilot, tool)
+
+                    canvas.on_mouse_down(
+                        self._mouse_event(MouseDown, canvas, 4, 6, meta=True)
+                    )
+                    canvas.on_mouse_up(
+                        self._mouse_event(MouseUp, canvas, 4, 6, meta=True)
+                    )
+                    await pilot.pause()
+                    results[tool] = sorted(canvas._layers[0].pixels)
+                return results
+
+        results = asyncio.run(main())
+        # Fine-pen left button paints the top pixel (4, 6); an offset
+        # would have painted (4, 7) instead.
+        assert (4, 6) in results["fine-pen"]
+        assert (4, 7) in results["fine-pen"]  # seed
+        # Spray scatters around the unshifted y=6; check only pixels the
+        # spray itself added (x != 4), excluding the seeded column.
+        added = {coord for coord in results["spray"] if coord[0] != 4}
+        assert not added or max(y for _, y in added) <= 7
+        # Paint bucket fills the seeded column from y=4; an offset click
+        # still fills the same region, but the fill result is unchanged.
+        assert min(y for _, y in results["paint_bucket"]) == 4
+
+    def test_alt_offsets_eraser_cursor(self) -> None:
+        """Alt applies to the eraser tool itself, not just pen right-click."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> list[tuple[int, int]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "eraser")
+                canvas.brush_size = 1
+                canvas.draw_cell(4, 6, canvas.pen_color)
+                canvas.draw_cell(4, 8, canvas.pen_color)
+
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=True)
+                )
+                canvas.on_mouse_up(self._mouse_event(MouseUp, canvas, 4, 6, meta=True))
+                await pilot.pause()
+                return sorted(canvas._layers[0].pixels)
+
+        remaining = asyncio.run(main())
+        # Offset erase anchors at y=7, clearing (4, 7) and (4, 8); the
+        # full-cell setup paints also left (4, 9) behind.
+        assert remaining == [(4, 6), (4, 9)]
+
+    def test_alt_offsets_rectangle_anchor_and_end(self) -> None:
+        """Alt+drag commits a rectangle offset down one pixel on both corners."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseMove, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "rectangle")
+                canvas.brush_size = 1
+
+                results = []
+                for meta in (True, False):
+                    canvas.on_mouse_down(
+                        self._mouse_event(MouseDown, canvas, 4, 6, meta=meta)
+                    )
+                    canvas.on_mouse_move(
+                        self._mouse_event(MouseMove, canvas, 8, 10, meta=meta)
+                    )
+                    canvas.on_mouse_up(
+                        self._mouse_event(MouseUp, canvas, 8, 10, meta=meta)
+                    )
+                    await pilot.pause()
+                    results.append(sorted(canvas._layers[0].pixels))
+                    canvas._layers[0].pixels.clear()
+                    canvas.refresh_composite()
+                return results[0], results[1]
+
+        offset, plain = asyncio.run(main())
+        # Brush size 1 paints both pixels of each outline cell, so the
+        # committed footprint extends one pixel past the outline's max_y.
+        assert {y for _, y in offset} == {7, 8, 9, 10, 11, 12}
+        assert {x for x, _ in offset} == {4, 5, 6, 7, 8}
+        assert {y for _, y in plain} == {6, 7, 8, 9, 10, 11}
+        assert {x for x, _ in plain} == {4, 5, 6, 7, 8}
+
+    def test_alt_offsets_line_start(self) -> None:
+        """Alt+drag commits a line whose anchor is offset down one pixel."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseMove, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> list[tuple[int, int]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "line")
+                canvas.brush_size = 1
+
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=True)
+                )
+                canvas.on_mouse_move(
+                    self._mouse_event(MouseMove, canvas, 8, 6, meta=True)
+                )
+                canvas.on_mouse_up(
+                    self._mouse_event(MouseUp, canvas, 8, 6, meta=True)
+                )
+                await pilot.pause()
+                return sorted(canvas._layers[0].pixels)
+
+        painted = asyncio.run(main())
+        assert (4, 7) in painted
+        assert (4, 6) not in painted
+        assert min(y for _, y in painted) == 7
+
+    def test_alt_pen_right_click_erases_at_offset(self) -> None:
+        """Alt applies to the right-click eraser while the pen is active."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> list[tuple[int, int]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "pen")
+                canvas.brush_size = 1
+                canvas.draw_cell(4, 6, canvas.pen_color)
+                canvas.draw_cell(4, 8, canvas.pen_color)
+
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=True, button=3)
+                )
+                canvas.on_mouse_up(
+                    self._mouse_event(MouseUp, canvas, 4, 6, meta=True, button=3)
+                )
+                await pilot.pause()
+                return sorted(canvas._layers[0].pixels)
+
+        remaining = asyncio.run(main())
+        # Offset erase anchors at y=7, clearing (4, 7) and (4, 8); the
+        # full-cell setup paints also left (4, 9) behind.
+        assert remaining == [(4, 6), (4, 9)]

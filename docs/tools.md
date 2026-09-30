@@ -12,6 +12,9 @@ Freehand drawing. Click or drag to paint with the current brush size and pen
 color. This is the default tool.
 
 - **Brush size:** ++w++ / ++s++, sizes 1–5
+- **Half-cell precision:** hold ++alt++ to offset the cursor down by one
+  pixel, painting from the bottom half of the cell under the pointer. Also
+  applies to right-click erasing while the pen is active.
 
 ## Fine pen
 
@@ -48,6 +51,8 @@ Erases pixels back to the transparent background. Behaves like the pen but
 removes paint instead of adding it.
 
 - **Brush size:** ++w++ / ++s++, sizes 1–5
+- **Half-cell precision:** hold ++alt++ to offset the cursor down by one
+  pixel, erasing from the bottom half of the cell under the pointer.
 
 ## Line
 
@@ -89,6 +94,11 @@ All shape tools (line, rectangle, circle, ellipse) share the same workflow:
 
 Committing with the **right button** draws the shape in the background color
 instead, effectively cutting the shape out of existing paint.
+
+Hold ++alt++ to offset the cursor down by one pixel — the offset applies to
+both the anchor (mouse down) and the drag end, so the whole shape shifts
+down to the bottom half of the cell. This also applies when committing with
+the right button.
 
 ## Normalized mode
 
