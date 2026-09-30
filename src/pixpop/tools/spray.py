@@ -75,6 +75,9 @@ class SprayTool(Tool):
         Pixels are scattered randomly within a circular brush radius area.
         Density is configurable based on spray_density setting.
 
+        In normalized mode each splat paints a full 1x2 cell snapped to an
+        even row; otherwise each splat is a single half-cell pixel.
+
         Args:
             canvas: The PaintCanvas instance.
             x: Center X coordinate.
@@ -102,15 +105,22 @@ class SprayTool(Tool):
 
             px = x + offset_x
             py = y + offset_y
-            if canvas.normalized:
-                py = py - (py % 2)
 
-            if canvas.is_valid_position(px, py):
+            if canvas.normalized:
+                # Snap to the even row and paint the full 1x2 cell.
+                py = py - (py % 2)
+                if canvas.is_valid_position(px, py):
+                    canvas.set_layer_pixel(px, py, canvas.pen_color, refresh=False)
+                    updated.add((px, py))
+                    if py + 1 < canvas.height:
+                        canvas.set_layer_pixel(
+                            px, py + 1, canvas.pen_color, refresh=False
+                        )
+                        updated.add((px, py + 1))
+            elif canvas.is_valid_position(px, py):
+                # Scatter a single half-cell pixel.
                 canvas.set_layer_pixel(px, py, canvas.pen_color, refresh=False)
                 updated.add((px, py))
-                if py + 1 < canvas.height:
-                    canvas.set_layer_pixel(px, py + 1, canvas.pen_color, refresh=False)
-                    updated.add((px, py + 1))
 
         if updated:
             canvas.refresh_composite_pixels(updated)

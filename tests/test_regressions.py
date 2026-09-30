@@ -1029,6 +1029,75 @@ class TestAltCursorOffset:
         assert remaining == [(4, 6), (4, 8)]
 
 
+class TestSprayTool:
+    """Spray scatters single pixels; normalized mode keeps full 1x2 cells."""
+
+    @staticmethod
+    def _spray_once(normalized: bool) -> list[tuple[int, int]]:
+        """Spray one burst at a fixed point and return painted pixels."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> list[tuple[int, int]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "spray")
+                canvas.brush_size = 3
+                canvas.normalized = normalized
+                canvas.tools["spray"].set_density(5)
+
+                canvas.on_mouse_down(
+                    TestAltCursorOffset._mouse_event(
+                        MouseDown, canvas, 20, 20, meta=False
+                    )
+                )
+                canvas.on_mouse_up(
+                    TestAltCursorOffset._mouse_event(
+                        MouseUp, canvas, 20, 20, meta=False
+                    )
+                )
+                await pilot.pause()
+                return sorted(canvas._layers[0].pixels)
+
+        return asyncio.run(main())
+
+    def test_spray_scatters_single_pixels(self) -> None:
+        """Non-normalized spray paints individual half-cell pixels.
+
+        Every splat is a single pixel, so painted pixels must include odd
+        rows (the old 1x2 cell behavior only ever painted full pairs).
+        """
+        painted = self._spray_once(normalized=False)
+        assert painted, "spray painted nothing"
+        assert any(y % 2 == 1 for _, y in painted), (
+            f"no odd-row pixels: spray is still painting full cells: {painted}"
+        )
+        assert any(
+            (x, y + 1) not in painted and (x, y - 1) not in painted for x, y in painted
+        ), "every pixel is vertically paired; spray is not scattering singles"
+
+    def test_spray_normalized_paints_full_cells(self) -> None:
+        """Normalized spray snaps to even rows and paints both cell halves."""
+        painted = self._spray_once(normalized=True)
+        assert painted, "spray painted nothing"
+        coords = set(painted)
+        for x, y in coords:
+            if y % 2 == 0:
+                assert (x, y + 1) in coords, (
+                    f"even-row pixel {(x, y)} missing its bottom half"
+                )
+            else:
+                assert (x, y - 1) in coords, (
+                    f"odd-row pixel {(x, y)} missing its top half"
+                )
+
+
 class TestCellTool:
     """The cell tool paints one full terminal cell; brush size does not apply."""
 
