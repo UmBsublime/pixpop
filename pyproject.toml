@@ -36,7 +36,7 @@ exclude = [
 
 [project]
 name = "pixpop"
-version = "0.1.0"
+version = "0.1.1"
 description = "A TUI paint application built with Python and the Textual framework"
 readme = "README.md"
 requires-python = ">=3.14"
