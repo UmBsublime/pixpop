@@ -1,16 +1,17 @@
 """Canvas drawing tools package."""
 
 from pixpop.tools.base import CanvasProtocol, Tool, snap_to_normalized
+from pixpop.tools.cell import CellTool
 from pixpop.tools.circle import CircleTool
 from pixpop.tools.continuous_tool import ContinuousTool
 from pixpop.tools.ellipse import EllipseTool
 from pixpop.tools.eraser import EraserTool
-from pixpop.tools.fine_pen import FinePenTool
 from pixpop.tools.line import LineTool
 from pixpop.tools.paint_bucket import PaintBucketTool
 from pixpop.tools.pen import PenTool
 from pixpop.tools.rectangle import RectangleTool
 from pixpop.tools.registry import (
+    get_brush_size_capable_tool_names,
     get_default_tool_name,
     get_max_brush_size,
     get_normalized_capable_tool_names,
@@ -27,15 +28,16 @@ __all__ = [
     "ShapeTool",
     "ContinuousTool",
     "snap_to_normalized",
+    "CellTool",
     "CircleTool",
     "EllipseTool",
     "EraserTool",
-    "FinePenTool",
     "LineTool",
     "PaintBucketTool",
     "PenTool",
     "RectangleTool",
     "SprayTool",
+    "get_brush_size_capable_tool_names",
     "get_default_tool_name",
     "get_max_brush_size",
     "get_normalized_capable_tool_names",

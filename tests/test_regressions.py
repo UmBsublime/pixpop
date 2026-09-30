@@ -418,7 +418,7 @@ class TestSessionApply:
 
 
 class TestPerToolBrushSizeLimits:
-    """Per-tool brush size caps: shapes 1-3, pen/line/eraser/spray 1-5."""
+    """Brush size limits: every tool supports sizes 1-5."""
 
     def test_registry_max_brush_size_per_tool(self) -> None:
         from pixpop.tools.registry import get_max_brush_size
@@ -428,9 +428,9 @@ class TestPerToolBrushSizeLimits:
         assert get_max_brush_size("spray") == 5
         assert get_max_brush_size("line") == 5
         assert get_max_brush_size("paint_bucket") == 5
-        assert get_max_brush_size("rectangle") == 3
-        assert get_max_brush_size("circle") == 3
-        assert get_max_brush_size("ellipse") == 3
+        assert get_max_brush_size("rectangle") == 5
+        assert get_max_brush_size("circle") == 5
+        assert get_max_brush_size("ellipse") == 5
 
     def test_registry_max_brush_size_unknown_falls_back(self) -> None:
         from pixpop.constants import MAX_BRUSH_SIZE
@@ -438,27 +438,8 @@ class TestPerToolBrushSizeLimits:
 
         assert get_max_brush_size("no-such-tool") == MAX_BRUSH_SIZE
 
-    def test_tool_switch_clamps_shared_brush_size(self) -> None:
-        """Pen at size 5 -> switch to ellipse -> state clamps to 3."""
-        import asyncio
-
-        from pixpop.workspace import PaintWorkspace
-        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
-
-        async def main() -> int:
-            app = SnapshotPaintApp()
-            async with app.run_test(size=(120, 60)) as pilot:
-                await pilot.pause()
-                ws = pilot.app.query_one(PaintWorkspace)
-                await select_tool(pilot, "pen")
-                ws._set_tool_state(brush_size=5)
-                await select_tool(pilot, "ellipse")
-                return ws._state.brush_size
-
-        assert asyncio.run(main()) == 3
-
-    def test_tool_switch_back_keeps_clamped_size(self) -> None:
-        """No per-tool memory: ellipse@3 -> pen stays at 3."""
+    def test_tool_switch_keeps_shared_brush_size(self) -> None:
+        """Pen at size 5 -> switch to ellipse -> size 5 is kept (no cap)."""
         import asyncio
 
         from pixpop.workspace import PaintWorkspace
@@ -475,10 +456,10 @@ class TestPerToolBrushSizeLimits:
                 await select_tool(pilot, "pen")
                 return ws._state.brush_size
 
-        assert asyncio.run(main()) == 3
+        assert asyncio.run(main()) == 5
 
-    def test_keyboard_increase_clamped_per_tool(self) -> None:
-        """'w' stops at 3 for ellipse but reaches 5 for pen."""
+    def test_keyboard_increase_reaches_max_for_shape_tools(self) -> None:
+        """'w' reaches 5 for shape tools as well as the pen."""
         import asyncio
 
         from pixpop.workspace import PaintWorkspace
@@ -502,11 +483,11 @@ class TestPerToolBrushSizeLimits:
                 return ellipse_max, pen_max
 
         ellipse_max, pen_max = asyncio.run(main())
-        assert ellipse_max == 3
+        assert ellipse_max == 5
         assert pen_max == 5
 
-    def test_picker_hides_buttons_above_tool_max(self) -> None:
-        """Buttons 4-5 hidden for shape tools, all shown for pen."""
+    def test_picker_shows_all_sizes_for_shape_tools(self) -> None:
+        """All five size buttons shown for shape tools and the pen."""
         import asyncio
 
         from pixpop.widgets import BrushSizePicker
@@ -526,11 +507,11 @@ class TestPerToolBrushSizeLimits:
                 return shape_display, pen_display
 
         shape_display, pen_display = asyncio.run(main())
-        assert shape_display == [True, True, True, False, False]
+        assert shape_display == [True] * 5
         assert pen_display == [True] * 5
 
-    def test_session_with_shape_tool_and_size_5_clamps_on_apply(self) -> None:
-        """Legacy .pix: active ellipse + brush_size 5 -> clamped to 3."""
+    def test_session_with_shape_tool_and_size_5_kept_on_apply(self) -> None:
+        """Legacy .pix: active ellipse + brush_size 5 -> kept (max is 5)."""
         import asyncio
 
         from pixpop.session import apply_session_file, session_from_dict
@@ -559,46 +540,59 @@ class TestPerToolBrushSizeLimits:
                 await pilot.pause()
                 return ws._state.brush_size
 
-        assert asyncio.run(main()) == 3
+        assert asyncio.run(main()) == 5
 
 
 class TestBrushFootprint:
-    """Brush footprint sizes: 1=cell (1x2), 2=2x2, 3=4x4, 4=6x6, 5=8x8."""
+    """Brush footprint sizes: 1=1x1, 2=2x2, 3=3x3, 4=4x4, 5=5x5."""
 
     @staticmethod
     def _offsets_for(size: int) -> set[tuple[int, int]]:
         from pixpop.canvas import PaintCanvas
+        from pixpop.tools.pen import PenTool
 
         canvas = PaintCanvas.__new__(PaintCanvas)
+        canvas._current_tool = PenTool()
         canvas.brush_size = size
         return set(PaintCanvas._brush_offsets(canvas))
 
-    def test_size_1_is_single_full_cell(self) -> None:
-        assert self._offsets_for(1) == {(0, 0), (0, 1)}
+    def test_size_1_is_single_pixel(self) -> None:
+        assert self._offsets_for(1) == {(0, 0)}
 
     def test_size_2_is_2x2(self) -> None:
         assert self._offsets_for(2) == {(0, 0), (1, 0), (0, 1), (1, 1)}
 
-    def test_size_3_is_4x4_top_left_anchored(self) -> None:
+    def test_size_3_is_3x3(self) -> None:
         offsets = self._offsets_for(3)
+        assert len(offsets) == 9
+        assert {dx for dx, _ in offsets} == {0, 1, 2}
+        assert {dy for _, dy in offsets} == {0, 1, 2}
+
+    def test_size_4_is_4x4(self) -> None:
+        offsets = self._offsets_for(4)
         assert len(offsets) == 16
         assert {dx for dx, _ in offsets} == {0, 1, 2, 3}
         assert {dy for _, dy in offsets} == {0, 1, 2, 3}
 
-    def test_size_4_is_6x6(self) -> None:
-        offsets = self._offsets_for(4)
-        assert len(offsets) == 36
-        assert {dx for dx, _ in offsets} == {-2, -1, 0, 1, 2, 3}
-        assert {dy for _, dy in offsets} == {-2, -1, 0, 1, 2, 3}
-
-    def test_size_5_is_8x8_top_left_anchored(self) -> None:
+    def test_size_5_is_5x5(self) -> None:
         offsets = self._offsets_for(5)
-        assert len(offsets) == 64
-        assert {dx for dx, _ in offsets} == {0, 1, 2, 3, 4, 5, 6, 7}
-        assert {dy for _, dy in offsets} == {0, 1, 2, 3, 4, 5, 6, 7}
+        assert len(offsets) == 25
+        assert {dx for dx, _ in offsets} == {0, 1, 2, 3, 4}
+        assert {dy for _, dy in offsets} == {0, 1, 2, 3, 4}
 
-    def test_sizes_3_and_5_align_flush_in_top_left_corner(self) -> None:
-        """At canvas origin, sizes 3/5 paint nothing above/left of the cursor."""
+    def test_cell_tool_footprint_is_one_full_cell(self) -> None:
+        """The cell tool ignores brush size: always 1x2 (both cell halves)."""
+        from pixpop.canvas import PaintCanvas
+        from pixpop.tools.cell import CellTool
+
+        canvas = PaintCanvas.__new__(PaintCanvas)
+        canvas._current_tool = CellTool()
+        for size in range(1, 6):
+            canvas.brush_size = size
+            assert set(PaintCanvas._brush_offsets(canvas)) == {(0, 0), (0, 1)}
+
+    def test_all_sizes_align_flush_in_top_left_corner(self) -> None:
+        """At canvas origin, every size paints nothing above/left of the cursor."""
         import asyncio
 
         from pixpop.canvas import PaintCanvas
@@ -610,7 +604,7 @@ class TestBrushFootprint:
             async with app.run_test(size=(120, 60)) as pilot:
                 await pilot.pause()
                 canvas = pilot.app.query_one(PaintCanvas)
-                for size in (3, 5):
+                for size in (1, 2, 3, 4, 5):
                     canvas.brush_size = size
                     canvas.draw_cell(0, 0, canvas.pen_color)
                     painted = [
@@ -624,16 +618,16 @@ class TestBrushFootprint:
                     canvas._layers[0].pixels.clear()
             return results
 
+        expected = {1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
         for size, min_x, min_y, count in asyncio.run(main()):
-            side = 2 * (size - 1)
             assert (min_x, min_y) == (0, 0), f"size {size} not flush at origin"
-            assert count == side * side, (
-                f"size {size} painted {count}, expected {side * side}"
+            assert count == expected[size], (
+                f"size {size} painted {count}, expected {expected[size]}"
             )
 
 
 class TestAltCursorOffset:
-    """Holding Alt with the pen, eraser, or a shape tool offsets the cursor."""
+    """Holding Alt with the pen, cell, eraser, or a shape tool offsets the cursor."""
 
     @staticmethod
     def _mouse_event(event_cls, canvas, x: int, y: int, meta: bool, button: int = 1):
@@ -680,19 +674,88 @@ class TestAltCursorOffset:
                 canvas.on_mouse_down(
                     self._mouse_event(MouseDown, canvas, 4, 6, meta=False)
                 )
-                canvas.on_mouse_up(
-                    self._mouse_event(MouseUp, canvas, 4, 6, meta=False)
-                )
+                canvas.on_mouse_up(self._mouse_event(MouseUp, canvas, 4, 6, meta=False))
                 await pilot.pause()
                 plain = sorted(canvas._layers[0].pixels)
                 return offset, plain
 
         offset, plain = asyncio.run(main())
-        assert offset == [(4, 7), (4, 8)]
+        # Brush size 1 paints a single pixel: Alt targets the cell's
+        # bottom pixel, without Alt its top pixel.
+        assert offset == [(4, 7)]
+        assert plain == [(4, 6)]
+
+    def test_pen_size_1_replaces_fine_pen(self) -> None:
+        """Pen at size 1 paints one pixel; Alt reaches the cell's bottom half."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> list[tuple[int, int]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "pen")
+                canvas.brush_size = 1
+
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=False)
+                )
+                canvas.on_mouse_up(self._mouse_event(MouseUp, canvas, 4, 6, meta=False))
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=True)
+                )
+                canvas.on_mouse_up(self._mouse_event(MouseUp, canvas, 4, 6, meta=True))
+                await pilot.pause()
+                return sorted(canvas._layers[0].pixels)
+
+        # Two clicks on the same cell paint its top and bottom pixels.
+        assert asyncio.run(main()) == [(4, 6), (4, 7)]
+
+    def test_alt_offsets_cell_down_one_pixel(self) -> None:
+        """Cell paints both pixels of the cell; Alt shifts the footprint down."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "cell")
+
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=False)
+                )
+                canvas.on_mouse_up(self._mouse_event(MouseUp, canvas, 4, 6, meta=False))
+                await pilot.pause()
+                plain = sorted(canvas._layers[0].pixels)
+
+                canvas._layers[0].pixels.clear()
+                canvas.refresh_composite()
+
+                canvas.on_mouse_down(
+                    self._mouse_event(MouseDown, canvas, 4, 6, meta=True)
+                )
+                canvas.on_mouse_up(self._mouse_event(MouseUp, canvas, 4, 6, meta=True))
+                await pilot.pause()
+                offset = sorted(canvas._layers[0].pixels)
+                return plain, offset
+
+        plain, offset = asyncio.run(main())
         assert plain == [(4, 6), (4, 7)]
+        assert offset == [(4, 7), (4, 8)]
 
     def test_alt_ignored_for_other_tools(self) -> None:
-        """Alt does not offset the cursor for fine-pen/spray/bucket."""
+        """Alt does not offset the cursor for spray/bucket."""
         import asyncio
 
         from textual.events import MouseDown, MouseUp
@@ -708,7 +771,7 @@ class TestAltCursorOffset:
                 canvas = pilot.app.query_one(PaintCanvas)
                 canvas.brush_size = 1
 
-                for tool in ("fine-pen", "spray", "paint_bucket"):
+                for tool in ("spray", "paint_bucket"):
                     canvas._layers[0].pixels.clear()
                     canvas.refresh_composite()
                     # Seed a background so the bucket has something to fill.
@@ -727,10 +790,6 @@ class TestAltCursorOffset:
                 return results
 
         results = asyncio.run(main())
-        # Fine-pen left button paints the top pixel (4, 6); an offset
-        # would have painted (4, 7) instead.
-        assert (4, 6) in results["fine-pen"]
-        assert (4, 7) in results["fine-pen"]  # seed
         # Spray scatters around the unshifted y=6; check only pixels the
         # spray itself added (x != 4), excluding the seeded column.
         added = {coord for coord in results["spray"] if coord[0] != 4}
@@ -766,9 +825,8 @@ class TestAltCursorOffset:
                 return sorted(canvas._layers[0].pixels)
 
         remaining = asyncio.run(main())
-        # Offset erase anchors at y=7, clearing (4, 7) and (4, 8); the
-        # full-cell setup paints also left (4, 9) behind.
-        assert remaining == [(4, 6), (4, 9)]
+        # Offset erase anchors at y=7, clearing only (4, 7).
+        assert remaining == [(4, 6), (4, 8)]
 
     def test_alt_offsets_rectangle_anchor_and_end(self) -> None:
         """Alt+drag commits a rectangle offset down one pixel on both corners."""
@@ -805,11 +863,10 @@ class TestAltCursorOffset:
                 return results[0], results[1]
 
         offset, plain = asyncio.run(main())
-        # Brush size 1 paints both pixels of each outline cell, so the
-        # committed footprint extends one pixel past the outline's max_y.
-        assert {y for _, y in offset} == {7, 8, 9, 10, 11, 12}
+        # Brush size 1 paints a single pixel per outline cell.
+        assert {y for _, y in offset} == {7, 8, 9, 10, 11}
         assert {x for x, _ in offset} == {4, 5, 6, 7, 8}
-        assert {y for _, y in plain} == {6, 7, 8, 9, 10, 11}
+        assert {y for _, y in plain} == {6, 7, 8, 9, 10}
         assert {x for x, _ in plain} == {4, 5, 6, 7, 8}
 
     def test_alt_offsets_line_start(self) -> None:
@@ -835,9 +892,7 @@ class TestAltCursorOffset:
                 canvas.on_mouse_move(
                     self._mouse_event(MouseMove, canvas, 8, 6, meta=True)
                 )
-                canvas.on_mouse_up(
-                    self._mouse_event(MouseUp, canvas, 8, 6, meta=True)
-                )
+                canvas.on_mouse_up(self._mouse_event(MouseUp, canvas, 8, 6, meta=True))
                 await pilot.pause()
                 return sorted(canvas._layers[0].pixels)
 
@@ -875,6 +930,120 @@ class TestAltCursorOffset:
                 return sorted(canvas._layers[0].pixels)
 
         remaining = asyncio.run(main())
-        # Offset erase anchors at y=7, clearing (4, 7) and (4, 8); the
-        # full-cell setup paints also left (4, 9) behind.
-        assert remaining == [(4, 6), (4, 9)]
+        # Offset erase anchors at y=7, clearing only (4, 7).
+        assert remaining == [(4, 6), (4, 8)]
+
+
+class TestCellTool:
+    """The cell tool paints one full terminal cell; brush size does not apply."""
+
+    def test_cell_paints_full_cell_regardless_of_brush_size(self) -> None:
+        """With the shared brush size at 5, a cell click still paints 1x2."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> list[tuple[int, int]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "cell")
+                canvas.brush_size = 5
+
+                canvas.on_mouse_down(
+                    TestAltCursorOffset._mouse_event(
+                        MouseDown, canvas, 4, 6, meta=False
+                    )
+                )
+                canvas.on_mouse_up(
+                    TestAltCursorOffset._mouse_event(MouseUp, canvas, 4, 6, meta=False)
+                )
+                await pilot.pause()
+                return sorted(canvas._layers[0].pixels)
+
+        assert asyncio.run(main()) == [(4, 6), (4, 7)]
+
+    def test_brush_size_picker_hidden_for_cell(self) -> None:
+        """The brush size picker hides for cell and shows for other tools."""
+        import asyncio
+
+        from pixpop.widgets import BrushSizePicker
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> tuple[bool, bool]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                picker = pilot.app.query_one(BrushSizePicker)
+
+                await select_tool(pilot, "cell")
+                cell_hidden = picker.has_class("invisible")
+
+                await select_tool(pilot, "pen")
+                pen_hidden = picker.has_class("invisible")
+                return cell_hidden, pen_hidden
+
+        cell_hidden, pen_hidden = asyncio.run(main())
+        assert cell_hidden is True
+        assert pen_hidden is False
+
+    def test_brush_size_keys_noop_for_cell(self) -> None:
+        """'w'/'s' do not change the shared brush size while cell is active."""
+        import asyncio
+
+        from pixpop.workspace import PaintWorkspace
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> tuple[int, int]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                ws = pilot.app.query_one(PaintWorkspace)
+                await select_tool(pilot, "cell")
+                size_before = ws._state.brush_size
+                ws.action_increase_brush_size()
+                ws.action_decrease_brush_size()
+                return size_before, ws._state.brush_size
+
+        before, after = asyncio.run(main())
+        assert after == before
+
+    def test_right_click_with_cell_erases_full_cell(self) -> None:
+        """Right-click while cell is active erases the full cell footprint."""
+        import asyncio
+
+        from textual.events import MouseDown, MouseUp
+
+        from pixpop.canvas import PaintCanvas
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> list[tuple[int, int]]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                await select_tool(pilot, "cell")
+                canvas.brush_size = 5
+                for y in range(4, 12):
+                    canvas.set_layer_pixel(4, y, canvas.pen_color)
+
+                canvas.on_mouse_down(
+                    TestAltCursorOffset._mouse_event(
+                        MouseDown, canvas, 4, 6, meta=False, button=3
+                    )
+                )
+                canvas.on_mouse_up(
+                    TestAltCursorOffset._mouse_event(
+                        MouseUp, canvas, 4, 6, meta=False, button=3
+                    )
+                )
+                await pilot.pause()
+                return sorted(canvas._layers[0].pixels)
+
+        remaining = asyncio.run(main())
+        # The full cell at y=6-7 is erased; the rest of the column remains.
+        assert remaining == [(4, 4), (4, 5), (4, 8), (4, 9), (4, 10), (4, 11)]

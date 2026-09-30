@@ -137,6 +137,12 @@ def _validate_session(session: SessionFile) -> None:
     except ValueError as exc:
         raise SessionLoadError(f"Invalid color in session: {exc}") from exc
 
+    # Migrate sessions saved before the fine pen was removed: the pen at
+    # brush size 1 (plus Alt for the bottom pixel) replaces it.
+    if session.tool_state.current_tool == "fine-pen":
+        session.tool_state.current_tool = "pen"
+        session.tool_state.brush_size = MIN_BRUSH_SIZE
+
     # Tool state must be valid before it is applied to pickers/canvas, which
     # raise ValueError on unknown names or out-of-range values.
     valid_tools = {name for name, _ in get_tool_names_and_labels()}

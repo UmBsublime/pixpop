@@ -4,10 +4,10 @@ from dataclasses import dataclass
 
 from pixpop.constants import MAX_BRUSH_SIZE
 from pixpop.tools.base import Tool
+from pixpop.tools.cell import CellTool
 from pixpop.tools.circle import CircleTool
 from pixpop.tools.ellipse import EllipseTool
 from pixpop.tools.eraser import EraserTool
-from pixpop.tools.fine_pen import FinePenTool
 from pixpop.tools.line import LineTool
 from pixpop.tools.paint_bucket import PaintBucketTool
 from pixpop.tools.pen import PenTool
@@ -27,6 +27,7 @@ class ToolDefinition:
     tooltip: str  # UI tooltip
     tool_class: type[Tool]  # Tool class to instantiate
     supports_normalized: bool = False  # Whether normalized mode applies
+    supports_brush_size: bool = True  # Whether brush size applies
     max_brush_size: int = MAX_BRUSH_SIZE  # Upper brush size limit for this tool
 
 
@@ -40,13 +41,11 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         PenTool,
     ),
     ToolDefinition(
-        "fine-pen",
-        "Fine",
-        "Precise single-pixel pen: \n\n"
-        "• left-click top pixel\n"
-        "• middle-click both pixels\n"
-        "• right-click top pixel",
-        FinePenTool,
+        "cell",
+        "Cell",
+        "Paint a full cell (both pixels).\n\nAlt: offset cursor down 1px",
+        CellTool,
+        supports_brush_size=False,
     ),
     ToolDefinition(
         "spray",
@@ -72,7 +71,6 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         "Rect",
         "Draw a rectangle.\n\nAlt: offset cursor down 1px",
         RectangleTool,
-        max_brush_size=3,
     ),
     ToolDefinition(
         "line",
@@ -87,7 +85,6 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         "Draw a circle.\n\nAlt: offset cursor down 1px",
         CircleTool,
         supports_normalized=True,
-        max_brush_size=3,
     ),
     ToolDefinition(
         "ellipse",
@@ -95,7 +92,6 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         "Draw an ellipse.\n\nAlt: offset cursor down 1px",
         EllipseTool,
         supports_normalized=True,
-        max_brush_size=3,
     ),
 )
 
@@ -132,6 +128,11 @@ def get_default_tool_name() -> str:
 def get_normalized_capable_tool_names() -> frozenset[str]:
     """Return the names of tools that support normalized drawing mode."""
     return frozenset(t.name for t in _REGISTERED_TOOLS if t.supports_normalized)
+
+
+def get_brush_size_capable_tool_names() -> frozenset[str]:
+    """Return the names of tools that support brush sizes."""
+    return frozenset(t.name for t in _REGISTERED_TOOLS if t.supports_brush_size)
 
 
 def get_max_brush_size(tool_name: str) -> int:

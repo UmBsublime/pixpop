@@ -67,7 +67,7 @@ echo $COLORTERM  # should be truecolor
 pixpop
 ```
 
-- Draw with the mouse (see the [caveat](#the-half-character-caveat) below for the [fine pen](tools.md#fine-pen))
+- Draw with the mouse (see the [caveat](#the-half-character-caveat) below for single-pixel drawing)
 - Press ++question++ for the [help screen and full keybindings](shortcuts.md)
 - ++ctrl+s++ to save, ++ctrl+e++ to export, ++ctrl+o++ to load (`.ans`, `.png`, `.pix`)
 - Try `cat`-ing your `.ans` file back into the terminal
@@ -79,11 +79,11 @@ See [Getting Started](getting-started.md) for a full tour.
 Pixpop draws in the terminal using *half characters*: each terminal cell is two
 stacked pixels (`▀`). The mouse can only report which **cell** it is over — not
 whether it is on the top or bottom pixel of that cell. The
-[Fine pen](tools.md#fine-pen) works around this:
+[Pen](tools.md#pen) at brush size 1 paints exactly one pixel, and holding
+++alt++ offsets the cursor down one pixel to reach the bottom half of the cell:
 
-- **Left-click** paints the top pixel
-- **Right-click** paints the bottom pixel
-- **Middle-click** paints both pixels
+- **Size 1, click** paints the top pixel
+- **Size 1, ++alt++ + click** paints the bottom pixel
 
 ## Powered by
 

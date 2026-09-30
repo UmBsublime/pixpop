@@ -11,26 +11,23 @@ tooltip.
 Freehand drawing. Click or drag to paint with the current brush size and pen
 color. This is the default tool.
 
-- **Brush size:** ++w++ / ++s++, sizes 1–5
-- **Half-cell precision:** hold ++alt++ to offset the cursor down by one
-  pixel, painting from the bottom half of the cell under the pointer. Also
-  applies to right-click erasing while the pen is active.
+- **Brush size:** ++w++ / ++s++, sizes 1–5. The brush footprint is anchored
+  at the cursor's top-left pixel: **1** = 1×1 px, **2** = 2×2 px,
+  **3** = 3×3 px, **4** = 4×4 px, **5** = 5×5 px.
+- **Single-pixel precision:** at size 1 the pen paints exactly one pixel.
+  Hold ++alt++ to offset the cursor down by one pixel, painting the bottom
+  half of the cell under the pointer. Also applies to right-click erasing
+  while the pen is active.
 
-## Fine pen
+## Cell
 
-A precise single-pixel pen that works around the half-character limitation of
-terminal drawing. Each terminal cell holds two stacked pixels, and the mouse
-can only report the cell — so the fine pen lets *you* pick which pixel to
-paint:
+Paints a full terminal cell — both of its stacked pixels — in one click or
+drag. Handy for filling solid blocks without switching brush sizes.
 
-| Button | Pixel painted |
-|---|---|
-| Left-click | Top pixel |
-| Right-click | Bottom pixel |
-| Middle-click | Both pixels |
-
-!!! note
-    The fine pen always paints single pixels — brush size does not apply.
+- **No brush size:** the cell tool always paints exactly one full cell.
+- **Shifted cells:** hold ++alt++ to offset the cursor down by one pixel,
+  painting a cell that straddles the bottom half of the cell under the
+  pointer and the top half of the one below.
 
 ## Spray
 
@@ -67,21 +64,21 @@ and release to commit.
 Draws a rectangle outline between the drag start and release points, with
 live preview.
 
-- **Brush size:** sizes 1–3 (outline thickness)
+- **Brush size:** sizes 1–5 (outline thickness)
 
 ## Circle
 
 Draws a circle. The drag defines a bounding box; the circle is anchored
 inside it, with live preview.
 
-- **Brush size:** sizes 1–3
+- **Brush size:** sizes 1–5
 - Supports [normalized mode](#normalized-mode)
 
 ## Ellipse
 
 Draws an ellipse inscribed in the drag bounding box, with live preview.
 
-- **Brush size:** sizes 1–3
+- **Brush size:** sizes 1–5
 - Supports [normalized mode](#normalized-mode)
 
 ## Shape tool tips

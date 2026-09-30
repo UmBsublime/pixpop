@@ -8,7 +8,6 @@ from pixpop.canvas import PaintCanvas
 from tests.snapshot_helpers import (
     SnapshotPaintApp,
     canvas_to_offset,
-    middle_click,
     select_brush_size,
     select_spray_density,
     select_tool,
@@ -124,26 +123,6 @@ def test_pen_tool_snapshot(snap_compare) -> None:
     )
 
 
-def test_fine_pen_tool_snapshot(snap_compare) -> None:
-    """Capture a snapshot after fine-pen top/bottom strokes."""
-
-    async def run_before(pilot) -> None:
-        await pilot.pause()
-        canvas = pilot.app.query_one(PaintCanvas)
-        await select_tool(pilot, "fine-pen")
-
-        await pilot.mouse_down(canvas, offset=canvas_to_offset(14, 12))
-        await pilot.mouse_up(canvas, offset=canvas_to_offset(14, 12))
-
-        await middle_click(pilot, canvas, canvas_to_offset(18, 12))
-
-        canvas.refresh()
-
-    assert snap_compare(
-        SnapshotPaintApp(), terminal_size=(120, 60), run_before=run_before
-    )
-
-
 def test_rectangle_tool_snapshot(snap_compare) -> None:
     """Capture a snapshot after drawing a rectangle."""
 
@@ -153,6 +132,30 @@ def test_rectangle_tool_snapshot(snap_compare) -> None:
         await select_tool(pilot, "rectangle")
         await pilot.mouse_down(canvas, offset=canvas_to_offset(12, 12))
         await pilot.mouse_up(canvas, offset=canvas_to_offset(38, 26))
+        canvas.refresh()
+
+    assert snap_compare(
+        SnapshotPaintApp(), terminal_size=(120, 60), run_before=run_before
+    )
+
+
+def test_cell_tool_snapshot(snap_compare) -> None:
+    """Capture a snapshot after stamping and dragging full cells."""
+
+    async def run_before(pilot) -> None:
+        await pilot.pause()
+        canvas = pilot.app.query_one(PaintCanvas)
+        await select_tool(pilot, "cell")
+
+        # A short diagonal drag, then two single stamps.
+        await pilot.mouse_down(canvas, offset=canvas_to_offset(10, 10))
+        for x, y in ((14, 14), (18, 18), (22, 22)):
+            await pilot.hover(canvas, offset=canvas_to_offset(x, y))
+        await pilot.mouse_up(canvas, offset=canvas_to_offset(22, 22))
+        for x, y in ((34, 12), (40, 20)):
+            await pilot.mouse_down(canvas, offset=canvas_to_offset(x, y))
+            await pilot.mouse_up(canvas, offset=canvas_to_offset(x, y))
+
         canvas.refresh()
 
     assert snap_compare(

@@ -64,8 +64,7 @@ Drawing is mouse-only. These apply while the cursor is over the canvas:
 |---|---|
 | Left-click / drag | Paint with the active tool |
 | Right-click / drag | Erase with the active tool *(1)* |
-| Middle-click | Fine pen: paint both pixels of the cell |
-| ++alt++ + click / drag | Pen, eraser, and shape tools: offset the cursor down one pixel (bottom half of the cell) |
+| ++alt++ + click / drag | Pen, cell, eraser, and shape tools: offset the cursor down one pixel (bottom half of the cell) |
 | Drag with a shape tool | Live preview; release to commit |
 
 1.  For shape tools, right-click commits the shape with the background

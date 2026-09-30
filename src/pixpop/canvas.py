@@ -13,24 +13,20 @@ from textual_canvas import Canvas
 from pixpop.config import AppConfig
 from pixpop.constants import (
     BUTTON_LEFT,
-    BUTTON_MIDDLE,
     BUTTON_RIGHT,
+    MIN_BRUSH_SIZE,
     OVERLAY_FPS_LIMIT,
     ToolName,
 )
 from pixpop.state import UndoRedoManager
 from pixpop.tools import Tool, get_default_tool_name, instantiate_tools
 
-# Brush sizes whose square footprint is anchored at the cursor's top-left
-# pixel, so the block aligns flush with the cursor at the canvas's top-left
-# corner instead of extending above/left and clipping.
-_TOP_LEFT_ANCHORED_SIZES = (3, 5)
-
 # Tools whose mouse cursor is offset down one pixel while Alt is held
 # (the mouse resolves to a terminal cell; Alt targets its bottom pixel).
 _ALT_OFFSET_TOOLS = frozenset(
     {
         ToolName.PEN,
+        ToolName.CELL,
         ToolName.ERASER,
         ToolName.RECTANGLE,
         ToolName.LINE,
@@ -428,11 +424,11 @@ class PaintCanvas(Canvas):
         """Convert a mouse event to canvas coordinates.
 
         The mouse resolves to a terminal cell, whose canvas y is the top
-        pixel of that cell. When Alt is held with the pen, eraser, or a
-        shape tool active, the cursor is offset down by one pixel (the
-        bottom half of the cell), giving those tools the fine pen's
-        vertical precision. (Alt is used because many terminals do not
-        report Shift with mouse events.)
+        pixel of that cell. When Alt is held with the pen, cell, eraser,
+        or a shape tool active, the cursor is offset down by one pixel
+        (anchored at the bottom half of the cell), giving those tools
+        single-pixel vertical precision. (Alt is used because many
+        terminals do not report Shift with mouse events.)
         """
         canvas_x, canvas_y = self.screen_to_canvas_coords(
             int(event.screen_x), int(event.screen_y)
@@ -459,36 +455,27 @@ class PaintCanvas(Canvas):
         return self._checker_colors[1]
 
     def _brush_offsets(self) -> list[tuple[int, int]]:
-        """Return (dx, dy) offsets covered by the current brush.
+        """Return (dx, dy) offsets covered by the active tool at the cursor.
 
-        Footprint per brush size (in pixels):
+        The cell tool ignores brush size and always covers one full
+        terminal cell (1x2 pixels). Every other tool paints an NxN block
+        per brush size N, anchored at the cursor's top-left pixel:
 
-        - size 1: one full cell (1x2 pixels, both halves of the anchor cell)
+        - size 1: 1x1 pixel (a single half-cell pixel)
         - size 2: 2x2 pixels
-        - size 3: 4x4 pixels, top-left anchored at the cursor
-        - size 4: 6x6 pixels
-        - size 5: 8x8 pixels, top-left anchored at the cursor
-
-        Sizes 3 and 5 are anchored at the cursor's top-left corner so the
-        block aligns flush with the cursor at the canvas's top-left corner.
-        Sizes 2 and 4 keep centered anchoring (symmetric on x, trailing
-        downward on y); size 2 already evaluates to the cursor-anchored
-        {(0,0),(1,0),(0,1),(1,1)}.
+        - size 3: 3x3 pixels
+        - size 4: 4x4 pixels
+        - size 5: 5x5 pixels
         """
-        if self.brush_size <= 1:
+        if self._current_tool.name == ToolName.CELL:
             return [(0, 0), (0, 1)]
-        half = self.brush_size - 1  # N = 2*half pixels per side
-        if self.brush_size in _TOP_LEFT_ANCHORED_SIZES:
-            side = half * 2
-            return [(dx, dy) for dx in range(side) for dy in range(side)]
-        lo = -(half - 1)
-        hi = half
-        return [(dx, dy) for dx in range(lo, hi + 1) for dy in range(lo, hi + 1)]
+        side = max(MIN_BRUSH_SIZE, self.brush_size)
+        return [(dx, dy) for dx in range(side) for dy in range(side)]
 
     def draw_cell(
         self, x: int, y: int, color: Color | None, is_erase: bool = False
     ) -> None:
-        """Draw or erase pixels in a brush-sized area centered at (x, y)."""
+        """Draw or erase pixels in the brush footprint anchored at (x, y)."""
         target_color = None if is_erase else color
         updated: set[tuple[int, int]] = set()
         for dx, dy in self._brush_offsets():
@@ -560,9 +547,7 @@ class PaintCanvas(Canvas):
         # gesture leaves no pixel behind even without mouse movement. A stale
         # arm (space already released, repeats stopped) never pans, and any
         # press that doesn't pan disarms the gesture.
-        if event.button == BUTTON_LEFT and (
-            event.ctrl or self._space_arm_fresh()
-        ):
+        if event.button == BUTTON_LEFT and (event.ctrl or self._space_arm_fresh()):
             self._start_pan(event.screen_x, event.screen_y)
             return
         if self._pan_armed and event.button == BUTTON_LEFT:
@@ -588,15 +573,6 @@ class PaintCanvas(Canvas):
                 self.erasing = self._current_tool.is_eraser()
             elif self._current_tool.supports_preview():
                 self._start_preview(canvas_x, canvas_y)
-        elif (
-            button in (BUTTON_MIDDLE, BUTTON_RIGHT)
-            and self._current_tool.name == ToolName.FINE_PEN
-        ):
-            if can_draw:
-                self.save_state_for_undo()
-            self._current_tool.on_mouse_down(self, canvas_x, canvas_y, button)
-            if self._current_tool.can_drag():
-                self.drawing = True
         elif button == BUTTON_RIGHT:
             # Right click - use eraser tool
             if can_draw:

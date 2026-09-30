@@ -27,9 +27,9 @@ I mainly use it now to create fun images to spice up my terminal MOTD via [jests
 
 This application is designed to draw in the terminal, which comes with limitations.
 We are able to draw `pixels` (half-characters), but there is no way to know if the mouse is positioned
-on the top or bottom pixel. To work around this we have the fine tool.
-It allows choosing the top pixel with left-click, the bottom pixel with right-click, and both pixels with middle-click.
-Alternatively, with the pen, eraser, and shape tools you can hold `Alt` to offset the cursor down by one pixel.
+on the top or bottom pixel. To work around this, set the pen to brush size 1 (a single pixel) and hold
+`Alt` to offset the cursor down by one pixel — painting the bottom half of the cell under the pointer.
+The `Alt` offset also applies to the cell, eraser, and shape tools.
 
 ## Screenshots
 
@@ -96,7 +96,7 @@ uv run pixpop
 pixpop
 ```
 
-- Draw with the mouse (see [Caveats](#caveats) for the fine tool)
+- Draw with the mouse (see [Caveats](#caveats) for single-pixel drawing)
 - Press `?` for the help screen and full keybindings
 - `Ctrl+S` to save, `Ctrl+E` to export, `Ctrl+O` to load (`.ans`, `.png`, `.pix`)
 - Try to `cat` your .ans file in the terminal

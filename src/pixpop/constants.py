@@ -9,7 +9,7 @@ class ToolName(StrEnum):
     """Canonical tool identifiers (match keys in the tool registry)."""
 
     PEN = "pen"
-    FINE_PEN = "fine-pen"
+    CELL = "cell"
     SPRAY = "spray"
     PAINT_BUCKET = "paint_bucket"
     ERASER = "eraser"

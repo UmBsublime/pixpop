@@ -1,4 +1,4 @@
-"""Base class for continuous freehand tools (pen, eraser, fine pen)."""
+"""Base class for continuous freehand tools (pen, eraser)."""
 
 from __future__ import annotations
 

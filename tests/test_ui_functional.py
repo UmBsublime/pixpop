@@ -9,7 +9,6 @@ from pixpop.widgets import ColorPicker
 from tests.snapshot_helpers import (
     SnapshotPaintApp,
     canvas_to_offset,
-    middle_click,
     rename_active_layer,
     rename_active_tab,
     select_brush_size,
@@ -104,12 +103,14 @@ def test_functional_house_drawing_snapshot(snap_compare, monkeypatch) -> None:
             await pilot.hover(canvas, offset=canvas_to_offset(x, y))
         await pilot.mouse_up(canvas, offset=canvas_to_offset(40, 82))
 
-        # Fine pen details
-        await select_tool(pilot, "fine-pen")
+        # Single-pixel pen details (size 1 replaces the old fine pen)
+        await select_tool(pilot, "pen")
+        await select_brush_size(pilot, 1)
         await select_color(10)  # black
         await pilot.mouse_down(canvas, offset=canvas_to_offset(42, 70))
         await pilot.mouse_up(canvas, offset=canvas_to_offset(42, 70))
-        await middle_click(pilot, canvas, canvas_to_offset(43, 70))
+        await pilot.mouse_down(canvas, offset=canvas_to_offset(43, 70))
+        await pilot.mouse_up(canvas, offset=canvas_to_offset(43, 70))
 
         # Spray grass
         await select_tool(pilot, "spray")

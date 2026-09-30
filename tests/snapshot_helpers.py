@@ -6,7 +6,6 @@ from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.events import MouseDown, MouseMove, MouseUp
 from textual.widgets import Footer, Header, Tabs
 
 from pixpop.app import PixPop
@@ -83,13 +82,3 @@ def rename_active_layer(pilot, name: str) -> None:
     canvas.rename_layer(canvas.active_layer_index, name)
     layer_picker = pilot.app.query_one(LayerPicker)
     layer_picker.set_layers(canvas.get_layers(), canvas.active_layer_index)
-
-
-async def middle_click(pilot, widget, offset: tuple[int, int]) -> None:
-    """Simulate a middle mouse click at the given widget offset."""
-    await pilot._post_mouse_events(
-        [MouseMove, MouseDown, MouseUp],
-        widget=widget,
-        offset=offset,
-        button=2,
-    )

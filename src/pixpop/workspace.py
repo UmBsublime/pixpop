@@ -29,6 +29,7 @@ from pixpop.state import (
     ToolChanged,
 )
 from pixpop.tools import (
+    get_brush_size_capable_tool_names,
     get_max_brush_size,
     get_normalized_capable_tool_names,
     get_tool_names_and_labels,
@@ -51,6 +52,9 @@ from pixpop.workspace_tabs import TabManager
 
 # Tools that support the normalized (even-row snapping) drawing mode.
 NORMALIZED_CAPABLE_TOOLS = get_normalized_capable_tool_names()
+
+# Tools that support brush sizes.
+BRUSH_SIZE_CAPABLE_TOOLS = get_brush_size_capable_tool_names()
 
 
 class PaintWorkspace(Static):
@@ -276,7 +280,7 @@ class PaintWorkspace(Static):
 
     def _update_brush_size_visibility(self, tool_name: str) -> None:
         """Show brush size picker only when tool supports brush sizes."""
-        self._get_brush_size_picker().set_visible(tool_name != ToolName.FINE_PEN)
+        self._get_brush_size_picker().set_visible(tool_name in BRUSH_SIZE_CAPABLE_TOOLS)
 
     def _update_spray_density_visibility(self, tool_name: str) -> None:
         """Show spray density picker only when spray tool is active."""
@@ -336,14 +340,10 @@ class PaintWorkspace(Static):
         brush_size: int | None = None,
         spray_density: int | None = None,
         normalized: bool | None = None,
-        enforce_fine_pen: bool = False,
     ) -> None:
         """Update shared tool state and propagate to UI/canvas."""
         if tool_name is not None:
             self._state.current_tool_name = tool_name
-            if enforce_fine_pen and tool_name == ToolName.FINE_PEN:
-                self._state.brush_size = MIN_BRUSH_SIZE
-                brush_size = None
         if brush_size is not None:
             self._state.brush_size = brush_size
         # Clamp shared brush size to the active tool's per-tool limit.
@@ -462,10 +462,7 @@ class PaintWorkspace(Static):
         """Handle tool change events from ToolPicker."""
         if not self._is_event_from_this_workspace(event.sender):
             return
-        self._set_tool_state(
-            tool_name=event.tool_name,
-            enforce_fine_pen=True,
-        )
+        self._set_tool_state(tool_name=event.tool_name)
 
     def on_brush_size_changed(self, event: BrushSizeChanged) -> None:
         """Handle brush size change events from BrushSizePicker."""
@@ -682,7 +679,7 @@ class PaintWorkspace(Static):
             current_idx = 0
 
         next_idx = (current_idx + direction) % len(tools)
-        self._set_tool_state(tool_name=tools[next_idx], enforce_fine_pen=True)
+        self._set_tool_state(tool_name=tools[next_idx])
 
     def action_increase_brush_size(self) -> None:
         """Increase brush size by 1 (clamped at the active tool's max)."""
@@ -694,7 +691,7 @@ class PaintWorkspace(Static):
 
     def _adjust_brush_size(self, delta: int) -> None:
         """Adjust brush size by delta, clamped to the active tool's range."""
-        if self._state.current_tool_name == ToolName.FINE_PEN:
+        if self._state.current_tool_name not in BRUSH_SIZE_CAPABLE_TOOLS:
             return
         min_size, max_size = self._get_brush_size_limits(self._state.current_tool_name)
         current_size = self._state.brush_size

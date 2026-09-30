@@ -20,17 +20,15 @@ from textual.geometry import Offset
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+from pixpop.canvas import PaintCanvas  # noqa: E402
+from pixpop.widgets import LayerPicker, ToolPicker  # noqa: E402
 from tests.snapshot_helpers import (  # noqa: E402
     SnapshotPaintApp,
     canvas_to_offset,
-    middle_click,
     rename_active_layer,
     rename_active_tab,
     select_tool,
 )
-
-from pixpop.canvas import PaintCanvas  # noqa: E402
-from pixpop.widgets import LayerPicker, ToolPicker  # noqa: E402
 
 OUTPUT_DIR = Path(__file__).resolve().parents[1] / "assets" / "images"
 TERMINAL_SIZE = (110, 36)
@@ -92,7 +90,9 @@ async def shot_tools() -> None:
         end = canvas_to_offset(60, 12)
         await pilot.hover(canvas, offset=start)
         await pilot.mouse_down(canvas, offset=start)
-        await pilot.hover(canvas, offset=Offset((start[0] + end[0]) // 2, (start[1] + end[1]) // 2))
+        await pilot.hover(
+            canvas, offset=Offset((start[0] + end[0]) // 2, (start[1] + end[1]) // 2)
+        )
         await pilot.hover(canvas, offset=end)
         await pilot.pause()
 
@@ -128,11 +128,11 @@ async def shot_layers() -> None:
         await pilot.pause()
         rename_active_layer(pilot, "fill")
 
-        # Middle-click inside the frame: fine pen paints both pixels of a cell.
-        await middle_click(pilot, canvas, canvas_to_offset(26, 14))
-        await middle_click(pilot, canvas, canvas_to_offset(30, 14))
-        await middle_click(pilot, canvas, canvas_to_offset(26, 18))
-        await middle_click(pilot, canvas, canvas_to_offset(30, 18))
+        # Fill cells inside the frame: the cell tool paints a full cell.
+        await select_tool(pilot, "cell")
+        for x, y in ((26, 14), (30, 14), (26, 18), (30, 18)):
+            await pilot.mouse_down(canvas, offset=canvas_to_offset(x, y))
+            await pilot.mouse_up(canvas, offset=canvas_to_offset(x, y))
 
         # Hide the outline layer so the picker shows a visibility toggle.
         canvas.set_layer_visibility(1, False)
