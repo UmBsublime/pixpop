@@ -1,0 +1,38 @@
+NewTabDialog {
+    align: center middle;
+
+    #new-tab-dialog {
+        width: 50;
+        height: auto;
+        padding: 1 2;
+        border: round $primary;
+        background: $panel;
+    }
+
+    #new-tab-title {
+        text-style: bold;
+        margin-bottom: 1;
+    }
+
+    .new-tab-label {
+        color: $text-muted;
+    }
+
+    .new-tab-input {
+        width: 1fr;
+        margin-bottom: 1;
+    }
+
+    #new-tab-error {
+        width: 1fr;
+        height: auto;
+        color: $error;
+    }
+
+    #new-tab-hint {
+        width: 1fr;
+        margin-top: 1;
+        color: $text-muted;
+        text-align: center;
+    }
+}

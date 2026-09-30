@@ -52,6 +52,18 @@ class TestParseToml:
         cfg = _parse_toml({"background_mode": "Solid"})
         assert cfg.background_mode == "solid"
 
+    def test_pan_direction_stick(self) -> None:
+        cfg = _parse_toml({"canvas_pan_direction": "stick"})
+        assert cfg.canvas_pan_direction == "stick"
+
+    def test_pan_direction_invalid_falls_back(self) -> None:
+        cfg = _parse_toml({"canvas_pan_direction": "wild"})
+        assert cfg.canvas_pan_direction == AppConfig().canvas_pan_direction
+
+    def test_pan_direction_case_insensitive(self) -> None:
+        cfg = _parse_toml({"canvas_pan_direction": "GRAB"})
+        assert cfg.canvas_pan_direction == "grab"
+
 
 class TestLoadConfig:
     """Integration tests for load_config file discovery."""

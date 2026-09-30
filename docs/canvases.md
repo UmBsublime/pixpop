@@ -7,7 +7,7 @@ has its own size, layers, and undo/redo history.
 
 | Action | Keys | Notes |
 |---|---|---|
-| New tab | ++t++ | Creates a fresh canvas |
+| New tab | ++t++ | Asks for a canvas size, then creates a fresh canvas |
 | Switch tab | ++n++ | Cycles to the next tab (wraps around) |
 | Rename tab | ++r++ | Opens a rename dialog |
 | Close tab | ++ctrl+w++ | Closes the active tab |
@@ -19,9 +19,20 @@ The tab name is used as the default project name in the
 
 ## Canvas size
 
-The canvas automatically fills the available space and resizes with the
-terminal window — existing artwork is preserved when the canvas grows or
-shrinks.
+Each canvas has a fixed size in pixels, chosen when the tab is created —
+it does not resize with the terminal window. When a canvas is larger than
+the visible area, scrollbars appear; scroll by clicking or dragging them,
+or pan by holding ++space++ and dragging the canvas. (Ctrl+drag also pans
+in terminals that forward modifier+mouse events — under tmux you'll want
+the space gesture, since tmux's default bindings capture Ctrl+click.) See
+[`canvas_pan_direction`](configuration.md#canvas_pan_direction) to choose
+the gesture direction.
+
+By default a new canvas fills the available space, so no scrollbars are
+needed. Pressing ++t++ opens a dialog asking for the new canvas's width
+and height, pre-filled with that available size (or your last chosen size
+from the same session), so repeatedly creating same-sized canvases is a
+single ++enter++ away.
 
 Default and limit sizes are configurable:
 
@@ -31,6 +42,9 @@ Default and limit sizes are configurable:
   [`min_canvas_height`](configuration.md#min_canvas_height)
 - [`max_canvas_width`](configuration.md#max_canvas_width) /
   [`max_canvas_height`](configuration.md#max_canvas_height)
+
+The viewport-fit default is clamped between the configured min and max
+sizes.
 
 ## Flipping artwork
 

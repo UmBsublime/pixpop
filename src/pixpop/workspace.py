@@ -10,7 +10,7 @@ from textual.color import Color
 from textual.containers import Horizontal
 from textual.widgets import Static, TabbedContent, TabPane, Tabs
 
-from pixpop.canvas import PaintCanvas
+from pixpop.canvas import PaintCanvas, clamp_canvas_size
 from pixpop.config import AppConfig
 from pixpop.constants import (
     MIN_BRUSH_SIZE,
@@ -18,6 +18,7 @@ from pixpop.constants import (
 )
 from pixpop.names import get_adjective_noun_name
 from pixpop.screens.help_dialog import HelpDialog
+from pixpop.screens.new_tab_dialog import NewTabDialog
 from pixpop.screens.rename_dialog import RenameDialog
 from pixpop.state import (
     AppState,
@@ -99,6 +100,11 @@ class PaintWorkspace(Static):
         self._state = AppState()
         self._tab_counter = 0
         self._last_cursor_pos: tuple[int, int] | None = None
+        # Default size for new canvases. ``None`` means "fit the available
+        # viewport" (clamped to the configured min/max); a user-chosen size
+        # from the new-tab dialog replaces it and is remembered in memory
+        # for the rest of the session.
+        self._next_canvas_size: tuple[int, int] | None = None
         # Assign unique ID for this workspace instance
         PaintWorkspace._counter += 1
         self._workspace_id = f"ws-{PaintWorkspace._counter}-{uuid.uuid4().hex[:8]}"
@@ -513,14 +519,30 @@ class PaintWorkspace(Static):
         """Redo the last undone drawing operation."""
         self._get_canvas().action_redo()
 
-    def _create_tab_with_name(self, tab_name: str) -> TabPane:
-        """Create a new tab with a PaintCanvas and label."""
+    def _create_tab_with_name(
+        self,
+        tab_name: str,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> TabPane:
+        """Create a new tab with a PaintCanvas and label.
+
+        When no size is given, the canvas uses the remembered new-tab size,
+        or fits itself to the viewport on mount if none was chosen yet.
+        """
         self._tab_counter += 1
         tab_id = f"canvas-{self._tab_counter}-{self._workspace_id}"
         canvas_color = self._generate_canvas_color()
+        size = (
+            (width, height)
+            if width is not None and height is not None
+            else self._next_canvas_size
+        )
         canvas = PaintCanvas(
             canvas_color=canvas_color,
             config=self._config,
+            width=size[0] if size is not None else None,
+            height=size[1] if size is not None else None,
             id=tab_id,
         )
         self._apply_state_to_canvas(canvas)
@@ -536,11 +558,47 @@ class PaintWorkspace(Static):
         """Return the shared base color for the canvas background."""
         return Color.parse(self._config.background_color)
 
+    def _dialog_default_size(self) -> tuple[int, int]:
+        """Size to pre-fill in the new-tab dialog.
+
+        Uses the remembered user choice when there is one; otherwise the
+        current viewport's available space, clamped to the configured
+        min/max, so the default creates a canvas with no scrollbars.
+        """
+        if self._next_canvas_size is not None:
+            return self._next_canvas_size
+        try:
+            canvas = self._get_canvas()
+        except ValueError:
+            return (
+                self._config.default_canvas_width,
+                self._config.default_canvas_height,
+            )
+        content = canvas.content_size
+        if content.width == 0 or content.height == 0:
+            return (canvas.width, canvas.height)
+        return clamp_canvas_size(
+            self._config, int(content.width), int(content.height) * 2
+        )
+
     def action_new_tab(self) -> None:
-        """Create a new canvas tab."""
-        new_tab = self._create_new_tab()
-        self._tabs_manager.add_pane(new_tab, activate=True)
-        self._refresh_active_canvas()
+        """Ask for a canvas size, then create a new canvas tab."""
+
+        def handle_size(result: tuple[int, int] | None) -> None:
+            if result is None:
+                return
+            # Remember the chosen size as the default for subsequent new tabs.
+            self._next_canvas_size = result
+            new_tab = self._create_new_tab()
+            self._tabs_manager.add_pane(new_tab, activate=True)
+            # The pane's canvas mounts asynchronously; refresh once it exists.
+            self.call_after_refresh(self._refresh_active_canvas)
+
+        default_width, default_height = self._dialog_default_size()
+        self.app.push_screen(
+            NewTabDialog(default_width, default_height, self._config),
+            handle_size,
+        )
 
     def action_close_tab(self) -> None:
         """Close the current active canvas tab."""

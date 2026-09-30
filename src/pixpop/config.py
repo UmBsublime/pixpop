@@ -11,6 +11,7 @@ _CONFIG_FILENAME = "pixpop-config.toml"
 _XDG_CONFIG_PATH = Path.home() / ".config" / "pixpop" / "config.toml"
 
 _VALID_BACKGROUND_MODES = frozenset({"solid", "checker"})
+_VALID_PAN_DIRECTIONS = frozenset({"grab", "stick"})
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,7 @@ class AppConfig:
     recent_colors_max: int = 8
     undo_max_entries: int = 50
     theme_name: str = "twilight-bog"
+    canvas_pan_direction: str = "grab"
 
 
 def _coerce_int(value: object, fallback: int) -> int:
@@ -87,6 +89,11 @@ def _parse_toml(data: dict[str, object]) -> AppConfig:
             candidate = str(raw).lower() if isinstance(raw, str) else fallback
             kwargs[f.name] = (
                 candidate if candidate in _VALID_BACKGROUND_MODES else fallback
+            )
+        elif f.name == "canvas_pan_direction":
+            candidate = str(raw).lower() if isinstance(raw, str) else fallback
+            kwargs[f.name] = (
+                candidate if candidate in _VALID_PAN_DIRECTIONS else fallback
             )
         else:
             kwargs[f.name] = _coerce_str(raw, fallback)

@@ -2,10 +2,11 @@
 
 import time
 from dataclasses import dataclass, field
-from typing import Iterable
+from typing import ClassVar, Iterable
 
+from textual.binding import Binding, BindingType
 from textual.color import Color
-from textual.events import Leave, MouseDown, MouseMove, MouseUp, Resize
+from textual.events import Leave, MouseDown, MouseMove, MouseUp
 from textual.message import Message
 from textual_canvas import Canvas
 
@@ -25,6 +26,20 @@ from pixpop.tools import Tool, get_default_tool_name, instantiate_tools
 # corner instead of extending above/left and clipping.
 _TOP_LEFT_ANCHORED_SIZES = (3, 5)
 
+# How long a space press keeps panning "armed" without further space events.
+# Held space produces auto-repeat presses well within this window; once the
+# user releases space, repeats stop and the armed state goes stale. A stale
+# arm can never start a pan (checked at mouse-down).
+_PAN_ARM_TIMEOUT = 0.5
+
+
+def clamp_canvas_size(config: AppConfig, width: int, height: int) -> tuple[int, int]:
+    """Clamp a canvas size to the configured min/max bounds."""
+    return (
+        max(config.min_canvas_width, min(config.max_canvas_width, width)),
+        max(config.min_canvas_height, min(config.max_canvas_height, height)),
+    )
+
 
 @dataclass
 class Layer:
@@ -37,6 +52,27 @@ class Layer:
 
 class PaintCanvas(Canvas):
     """A canvas widget that supports drawing and erasing with mouse interactions."""
+
+    # Shadow the inherited ScrollableContainer scroll-key bindings with no-ops
+    # so they neither scroll the canvas nor swallow the workspace's arrow-key
+    # layer shortcuts. Subclass bindings replace base bindings for the same
+    # key (see DOMNode._merge_bindings). Scrolling is available only by
+    # clicking/dragging the scrollbars; the mouse wheel is disabled below.
+    BINDINGS: ClassVar[list[BindingType]] = [
+        Binding(key, "noop", "", show=False)
+        for key in (
+            "up",
+            "down",
+            "left",
+            "right",
+            "home",
+            "end",
+            "pageup",
+            "pagedown",
+            "ctrl+pageup",
+            "ctrl+pagedown",
+        )
+    ]
 
     class CursorMoved(Message):
         """Posted when the cursor moves over a valid canvas cell."""
@@ -60,6 +96,8 @@ class PaintCanvas(Canvas):
         self,
         canvas_color: Color | None = None,
         config: AppConfig | None = None,
+        width: int | None = None,
+        height: int | None = None,
         **kwargs,
     ):
         cfg = config if config is not None else AppConfig()
@@ -78,9 +116,17 @@ class PaintCanvas(Canvas):
         self._checker_size_x = cfg.checker_size_width
         self._checker_size_y = cfg.checker_size_height
 
+        # The canvas has a fixed logical size in pixels, independent of the
+        # terminal/widget size. The parent ScrollView shows scrollbars when
+        # the canvas exceeds the visible viewport. When no explicit size is
+        # given, the canvas fits itself to the viewport once on mount
+        # (clamped to the configured min/max) and stays that size.
+        self._explicit_size = width is not None and height is not None
+        initial_width = width if width is not None else cfg.default_canvas_width
+        initial_height = height if height is not None else cfg.default_canvas_height
         super().__init__(
-            cfg.min_canvas_width,
-            cfg.min_canvas_height,
+            initial_width,
+            initial_height,
             canvas_color=canvas_color,
             **kwargs,
         )
@@ -109,6 +155,16 @@ class PaintCanvas(Canvas):
         self._cursor_pos: tuple[int, int] | None = None
         self._cursor_backup: dict[tuple[int, int], Color | None] = {}
         self._last_cursor_time: float = 0.0
+
+        # Panning state. A pan is started by ctrl+left-drag, or by left-drag
+        # while "armed" by holding space (the space gesture works in every
+        # terminal, since space is a plain key event outside the mouse
+        # protocol). While panning, drawing is suppressed and the mouse is
+        # captured so drags beyond the widget edge keep panning.
+        self._panning = False
+        self._pan_armed = False
+        self._pan_last_screen: tuple[float, float] | None = None
+        self._last_space_press: float = 0.0
 
     @property
     def current_tool(self) -> Tool:
@@ -342,10 +398,15 @@ class PaintCanvas(Canvas):
         self.refresh_composite()
 
     def screen_to_canvas_coords(self, screen_x: int, screen_y: int) -> tuple[int, int]:
-        """Convert screen coordinates to canvas-relative coordinates."""
+        """Convert screen coordinates to canvas-relative coordinates.
+
+        The scroll offset is added because the canvas content is shifted
+        under the viewport when scrolled; ``round()`` matches the integer
+        offset the render path uses.
+        """
         canvas_region = self.region
-        canvas_x = screen_x - canvas_region.x - 1
-        canvas_y = (screen_y - canvas_region.y) * 2
+        canvas_x = screen_x - canvas_region.x - 1 + round(self.scroll_offset.x)
+        canvas_y = (screen_y - canvas_region.y + round(self.scroll_offset.y)) * 2
         return canvas_x, canvas_y
 
     def is_valid_position(self, x: int, y: int) -> bool:
@@ -417,8 +478,64 @@ class PaintCanvas(Canvas):
             else:
                 super().set_pixel(px, py, color)
 
+    def on_key(self, event) -> None:
+        """Handle space presses to arm the pan gesture.
+
+        Terminals report a held key as repeated presses and (in the legacy
+        protocol) send no key-release event, so "space held" is tracked as a
+        *freshness* window: each press refreshes it, and once the user
+        releases space the repeats stop and the arm goes stale. A pan only
+        starts from a fresh arm (checked at mouse-down), and any mouse press
+        that doesn't pan disarms — so the app can never get stuck in move
+        mode, no matter the order in which space and the button are released.
+        """
+        if event.key != "space":
+            return
+        event.stop()
+        self._last_space_press = time.monotonic()
+        if self._panning:
+            return  # a pan is already active; keep its state
+        if not self._pan_armed:
+            self._pan_armed = True
+            self.hide_cursor()
+            self.styles.pointer = "grab"
+
+    def _disarm_pan(self) -> None:
+        """Disarm the space-pan gesture and restore the default pointer."""
+        self._pan_armed = False
+        if not self._panning:
+            self.styles.pointer = "default"
+
+    def _space_arm_fresh(self) -> bool:
+        """Whether the space-armed state is fresh enough to start a pan."""
+        return (
+            self._pan_armed
+            and time.monotonic() - self._last_space_press < _PAN_ARM_TIMEOUT
+        )
+
+    def _start_pan(self, screen_x: float, screen_y: float) -> None:
+        """Begin a pan gesture, suppressing any drawing for this stroke."""
+        self.hide_cursor()
+        self._panning = True
+        self._pan_last_screen = (screen_x, screen_y)
+        self.capture_mouse()
+        self.styles.pointer = "grabbing"
+
     def on_mouse_down(self, event: MouseDown) -> None:
         """Handle mouse button press."""
+        # Ctrl+left-click, or left-click while pan is freshly armed via
+        # space, starts panning; drawing is entirely suppressed so the
+        # gesture leaves no pixel behind even without mouse movement. A stale
+        # arm (space already released, repeats stopped) never pans, and any
+        # press that doesn't pan disarms the gesture.
+        if event.button == BUTTON_LEFT and (
+            event.ctrl or self._space_arm_fresh()
+        ):
+            self._start_pan(event.screen_x, event.screen_y)
+            return
+        if self._pan_armed and event.button == BUTTON_LEFT:
+            self._disarm_pan()
+
         canvas_x, canvas_y = self.screen_to_canvas_coords(
             int(event.screen_x), int(event.screen_y)
         )
@@ -462,6 +579,10 @@ class PaintCanvas(Canvas):
 
     def on_mouse_move(self, event: MouseMove) -> None:
         """Handle mouse movement."""
+        if self._panning:
+            self._update_pan(event.screen_x, event.screen_y)
+            return
+
         canvas_x, canvas_y = self.screen_to_canvas_coords(
             int(event.screen_x), int(event.screen_y)
         )
@@ -495,6 +616,11 @@ class PaintCanvas(Canvas):
 
     def on_mouse_up(self, event: MouseUp) -> None:
         """Handle mouse button release."""
+        # Releasing the mouse always ends an active pan.
+        if self._panning:
+            self._end_pan()
+            return
+
         canvas_x, canvas_y = self.screen_to_canvas_coords(
             int(event.screen_x), int(event.screen_y)
         )
@@ -510,20 +636,60 @@ class PaintCanvas(Canvas):
 
     def on_leave(self, event: Leave) -> None:
         """Handle mouse leaving the canvas widget."""
-        self.hide_cursor()
+        # Panning survives leaving the widget: the mouse is captured, so
+        # events keep flowing until mouse-up ends the pan.
+        if not self._panning:
+            self.hide_cursor()
+
+    def on_blur(self, event) -> None:
+        """Disarm pan when the canvas loses focus (stuck-flag guard)."""
+        self._disarm_pan()
+
+    def _update_pan(self, screen_x: float, screen_y: float) -> None:
+        """Pan the view based on mouse movement since the last event."""
+        if self._pan_last_screen is None:
+            return
+        last_x, last_y = self._pan_last_screen
+        dx = screen_x - last_x
+        dy = screen_y - last_y
+        self._pan_last_screen = (screen_x, screen_y)
+        if self._config.canvas_pan_direction == "stick":
+            target_x = self.scroll_offset.x + dx
+            target_y = self.scroll_offset.y + dy
+        else:  # "grab": content follows the cursor
+            target_x = self.scroll_offset.x - dx
+            target_y = self.scroll_offset.y - dy
+        self.scroll_to(target_x, target_y, animate=False)
+
+    def _end_pan(self) -> None:
+        """End a pan gesture and restore normal interaction."""
+        self._panning = False
+        self._pan_last_screen = None
+        self._disarm_pan()
+        self.release_mouse()
 
     def clear(self, width: int | None = None, height: int | None = None) -> None:
         """Clear canvas and all layers."""
+        size_changed = (
+            width is not None
+            and height is not None
+            and (width != self._width or height != self._height)
+        )
+        if width is not None and height is not None:
+            self._explicit_size = True
         super().clear(width=width, height=height)
         for layer in self._layers:
             layer.pixels.clear()
         self.refresh_composite()
+        if size_changed:
+            self._notify_canvas_size()
 
     def resize_preserve_content(self, new_width: int, new_height: int) -> None:
         """Resize the canvas, keeping layer pixels that remain in bounds."""
         old_width, old_height = self._width, self._height
         if old_width == 0 or old_height == 0:
             return
+        self._explicit_size = True
 
         # Clear cursor/preview overlays to avoid out-of-bounds writes
         self._cursor_backup = {}
@@ -546,31 +712,57 @@ class PaintCanvas(Canvas):
                 layer.pixels.pop(coord, None)
 
         self.refresh_composite()
+        if new_width != old_width or new_height != old_height:
+            self._notify_canvas_size()
 
     def _notify_canvas_size(self) -> None:
         """Notify listeners (e.g. the workspace) about the current canvas size."""
         self.post_message(self.Resized(self, self.width, self.height))
 
-    def _resize_to_widget(self) -> None:
-        """Resize canvas to match widget dimensions."""
+    def on_mount(self) -> None:
+        """Handle widget mounting."""
+        self.undo_manager.attach_canvas(self)
+        if not self._explicit_size:
+            # Defer until layout settles so content_size is measurable.
+            self.set_timer(0.1, self._fit_to_widget_once)
+
+    def _fit_to_widget_once(self) -> None:
+        """Fit the canvas to the visible viewport exactly once.
+
+        Applies only to canvases created without an explicit size (e.g. the
+        startup tab): they fill the available space (clamped to the
+        configured min/max) so no scrollbars appear, then stay fixed.
+        """
+        if self._explicit_size:
+            return
         content = self.content_size
         if content.width == 0 or content.height == 0:
             return
-        new_width = max(self._config.min_canvas_width, int(content.width))
-        new_height = max(self._config.min_canvas_height, int(content.height * 2))
-
+        new_width, new_height = clamp_canvas_size(
+            self._config, int(content.width), int(content.height) * 2
+        )
+        self._explicit_size = True
         if new_width != self._width or new_height != self._height:
             self.resize_preserve_content(new_width, new_height)
-            self._notify_canvas_size()
 
-    def on_resize(self, event: Resize) -> None:
-        """Handle resize events."""
-        self._resize_to_widget()
+    def action_noop(self) -> None:
+        """Swallow scroll keys so workspace bindings keep working."""
 
-    def on_mount(self) -> None:
-        """Handle widget mounting."""
-        self.set_timer(0.1, self._resize_to_widget)
-        self.undo_manager.attach_canvas(self)
+    def _on_mouse_scroll_up(self, event) -> None:
+        """Disable mouse-wheel scrolling; scrollbars are the only scroller."""
+        event.stop()
+
+    def _on_mouse_scroll_down(self, event) -> None:
+        """Disable mouse-wheel scrolling; scrollbars are the only scroller."""
+        event.stop()
+
+    def _on_mouse_scroll_left(self, event) -> None:
+        """Disable mouse-wheel scrolling; scrollbars are the only scroller."""
+        event.stop()
+
+    def _on_mouse_scroll_right(self, event) -> None:
+        """Disable mouse-wheel scrolling; scrollbars are the only scroller."""
+        event.stop()
 
     def action_undo(self) -> None:
         """Undo the last drawing operation."""

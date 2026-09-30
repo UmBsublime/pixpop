@@ -101,6 +101,12 @@ class HelpDialog(ModalScreen[None]):
             for section, lines in _build_sections():
                 yield Label(section, classes="help-section-title")
                 yield Label("\n".join(lines), classes="help-section-body")
+            yield Label("Mouse", classes="help-section-title")
+            yield Label(
+                "Space+drag or Ctrl+drag: Pan canvas\n"
+                "Click/drag scrollbars: Scroll canvas",
+                classes="help-section-body",
+            )
             yield Label("Press Esc, Enter, or q to close", id="help-hint")
 
     def action_close(self) -> None:

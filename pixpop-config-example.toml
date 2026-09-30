@@ -17,3 +17,5 @@ checker_color_b = "#313131"
 recent_colors_max = 8
 undo_max_entries = 50
 theme_name = "twilight-bog"
+# Options: grab/stick
+canvas_pan_direction = "grab"

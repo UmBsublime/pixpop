@@ -14,6 +14,7 @@ I mainly use it now to create fun images to spice up my terminal MOTD via [jests
 ## Features
 
 - Multiple canvases
+- Fixed-size canvases with scrollbars (independent of terminal size)
 - Multiple layers
 - Full mouse and keyboard support (drawing is mouse-only)
 - Configuration file for application defaults

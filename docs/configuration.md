@@ -41,6 +41,20 @@ Dimensions of a new canvas, in pixels. **Default: `128` / `128`**
 <a id="max_canvas_width"></a> <a id="max_canvas_height"></a>
 Largest allowed canvas dimensions, in pixels. **Default: `1024` / `1024`**
 
+## Interaction
+
+### canvas_pan_direction
+
+Direction of the canvas pan gesture (Space+drag, or Ctrl+drag where the
+terminal forwards it):
+
+- `"grab"` — the content follows the cursor (like Photoshop/Figma's hand
+  tool): dragging right reveals content to the left.
+- `"stick"` — the view follows the mouse direction: dragging right scrolls
+  the view right.
+
+**Default: `"grab"`**
+
 ## Background
 
 The canvas background is the pattern shown behind transparent pixels.
@@ -113,4 +127,6 @@ checker_color_b = "#313131"
 recent_colors_max = 8
 undo_max_entries = 50
 theme_name = "twilight-bog"
+# Options: grab/stick
+canvas_pan_direction = "grab"
 ```
