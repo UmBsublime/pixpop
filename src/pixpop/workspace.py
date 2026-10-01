@@ -81,6 +81,7 @@ class PaintWorkspace(Static):
         Binding("t", "new_tab", "New Tab", False),
         Binding("ctrl+w", "close_tab", "Close Tab", False),
         Binding("n", "next_tab", "Next Tab", False),
+        Binding("f", "toggle_fullscreen", "Fullscreen", False),
         Binding("?", "show_help", "Help"),
         Binding("/", "new_layer", "New Layer", False),
         Binding("delete", "remove_layer", "Remove Layer", False),
@@ -627,6 +628,15 @@ class PaintWorkspace(Static):
             next_idx = (current_idx + 1) % len(panes)
             self._tabs_manager.set_active_by_id(panes[next_idx].id)
             self._refresh_active_canvas(schedule_cursor=True)
+
+    def action_toggle_fullscreen(self) -> None:
+        """Toggle the canvas area (tabs included) fullscreen."""
+        screen = self.screen
+        canvas_tabs = self.query_one(CanvasTabs)
+        if screen.maximized is canvas_tabs:
+            screen.minimize()
+        else:
+            screen.maximize(canvas_tabs, container=False)
 
     def on_tabbed_content_tab_activated(
         self, event: TabbedContent.TabActivated

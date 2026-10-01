@@ -14,6 +14,10 @@ has its own size, layers, and undo/redo history.
 
 You can also click a tab to switch to it.
 
+Press ++f++ to toggle the tab area fullscreen: the side panel and header are
+hidden and the canvas tabs take over the window (the footer stays). Press
+++f++ again to restore the normal layout.
+
 The tab name is used as the default project name in the
 [save dialog](file-formats.md), so renaming tabs keeps exported files tidy.
 
@@ -45,6 +49,11 @@ Default and limit sizes are configurable:
 
 The viewport-fit default is clamped between the configured min and max
 sizes.
+
+A canvas smaller than the visible area is centered in its tab; the space
+around it shows the panel background. Centering follows the window size, so
+resizing the terminal or toggling [fullscreen](#working-with-tabs) recenters
+the canvas.
 
 ## Flipping artwork
 

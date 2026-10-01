@@ -56,6 +56,12 @@ generated from the live keymap, so it always matches your version.
 | ++ctrl+z++ | Undo |
 | ++ctrl+y++ | Redo |
 
+## View
+
+| Keys | Action |
+|---|---|
+| ++f++ | Toggle canvas fullscreen |
+
 ## Mouse reference
 
 Drawing is mouse-only. These apply while the cursor is over the canvas:

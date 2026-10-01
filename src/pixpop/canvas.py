@@ -2,13 +2,17 @@
 
 import time
 from dataclasses import dataclass, field
+from math import ceil
 from typing import ClassVar, Iterable
 
+from rich.segment import Segment
+from rich.style import Style
 from textual.actions import SkipAction
 from textual.binding import Binding, BindingType
 from textual.color import Color
 from textual.events import Leave, MouseDown, MouseMove, MouseUp
 from textual.message import Message
+from textual.strip import Strip
 from textual_canvas import Canvas
 
 from pixpop.config import AppConfig
@@ -408,16 +412,58 @@ class PaintCanvas(Canvas):
         )
         self.refresh_composite()
 
+    def _centering_offset_cells(self) -> tuple[int, int]:
+        """Margin in terminal cells used to center the canvas in the viewport.
+
+        Returns ``(0, 0)`` per axis whenever the canvas fills or exceeds the
+        viewport, so scrollable canvases keep their top-left anchored
+        behaviour. Recomputed on demand so it tracks window resizes and
+        fullscreen toggles.
+        """
+        viewport = self.scrollable_content_region
+        if viewport.width <= 0 or viewport.height <= 0:
+            return (0, 0)
+        margin_x = max(0, (viewport.width - self._width) // 2)
+        margin_y = max(0, (viewport.height - ceil(self._height / 2)) // 2)
+        return margin_x, margin_y
+
+    def render_line(self, y: int) -> Strip:
+        """Render a line, offsetting the canvas by its centering margin.
+
+        Cells in the margin render with the widget background (the tab's
+        panel colour), giving the canvas a visible mat when it is smaller
+        than the viewport.
+        """
+        margin_x, margin_y = self._centering_offset_cells()
+        if margin_x == 0 and margin_y == 0:
+            return super().render_line(y)
+        canvas_y = y - margin_y
+        if canvas_y < 0:
+            return Strip([])
+        strip = super().render_line(canvas_y)
+        if margin_x and strip:
+            background = self.styles.background
+            pad = Strip([Segment(" " * margin_x, Style(bgcolor=background.rich_color))])
+            strip = Strip.join([pad, strip])
+        return strip
+
     def screen_to_canvas_coords(self, screen_x: int, screen_y: int) -> tuple[int, int]:
         """Convert screen coordinates to canvas-relative coordinates.
 
         The scroll offset is added because the canvas content is shifted
         under the viewport when scrolled; ``round()`` matches the integer
-        offset the render path uses.
+        offset the render path uses. The centering margin (see
+        :meth:`_centering_offset_cells`) is subtracted so clicks in the
+        margin land out of bounds instead of on the canvas.
         """
         canvas_region = self.region
-        canvas_x = screen_x - canvas_region.x - 1 + round(self.scroll_offset.x)
-        canvas_y = (screen_y - canvas_region.y + round(self.scroll_offset.y)) * 2
+        margin_x, margin_y = self._centering_offset_cells()
+        canvas_x = (
+            screen_x - canvas_region.x - 1 + round(self.scroll_offset.x) - margin_x
+        )
+        canvas_y = (
+            screen_y - canvas_region.y + round(self.scroll_offset.y)
+        ) * 2 - margin_y * 2
         return canvas_x, canvas_y
 
     def _mouse_canvas_coords(

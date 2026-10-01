@@ -9,6 +9,10 @@ from textual.widgets import Static, TabbedContent, TabPane, Tabs
 class CanvasTabs(Static):
     """Container that hosts the tabbed canvases."""
 
+    # Not focusable itself, but still eligible for screen maximize so the
+    # canvas area (tabs included) can be toggled fullscreen.
+    ALLOW_MAXIMIZE = True
+
     def __init__(self, tabs_id: str, initial_pane: TabPane) -> None:
         super().__init__()
         self._tabs_id = tabs_id
