@@ -6,6 +6,7 @@ from pixpop.tools.circle import CircleTool
 from pixpop.tools.continuous_tool import ContinuousTool
 from pixpop.tools.ellipse import EllipseTool
 from pixpop.tools.eraser import EraserTool
+from pixpop.tools.light_tool import DarkTool, LightnessTool, LightTool
 from pixpop.tools.line import LineTool
 from pixpop.tools.paint_bucket import PaintBucketTool
 from pixpop.tools.pen import PenTool
@@ -31,7 +32,10 @@ __all__ = [
     "CellTool",
     "CircleTool",
     "EllipseTool",
+    "DarkTool",
     "EraserTool",
+    "LightnessTool",
+    "LightTool",
     "LineTool",
     "PaintBucketTool",
     "PenTool",

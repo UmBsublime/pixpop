@@ -8,6 +8,7 @@ from pixpop.tools.cell import CellTool
 from pixpop.tools.circle import CircleTool
 from pixpop.tools.ellipse import EllipseTool
 from pixpop.tools.eraser import EraserTool
+from pixpop.tools.light_tool import DarkTool, LightTool
 from pixpop.tools.line import LineTool
 from pixpop.tools.paint_bucket import PaintBucketTool
 from pixpop.tools.pen import PenTool
@@ -59,6 +60,18 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         "Fill",
         "Flood fill from the cursor.",
         PaintBucketTool,
+    ),
+    ToolDefinition(
+        "light",
+        "Light",
+        "Lighten painted pixels (HSL lightness).\n\nAlt: offset cursor down 1px",
+        LightTool,
+    ),
+    ToolDefinition(
+        "dark",
+        "Dark",
+        "Darken painted pixels (HSL lightness).\n\nAlt: offset cursor down 1px",
+        DarkTool,
     ),
     ToolDefinition(
         "eraser",

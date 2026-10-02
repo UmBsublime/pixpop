@@ -14,8 +14,10 @@ from textual.widgets import TabPane
 from pixpop.canvas import PaintCanvas
 from pixpop.constants import (
     MAX_BRUSH_SIZE,
+    MAX_LIGHT_STEP,
     MAX_SPRAY_DENSITY,
     MIN_BRUSH_SIZE,
+    MIN_LIGHT_STEP,
     MIN_SPRAY_DENSITY,
 )
 from pixpop.session.model import (
@@ -161,6 +163,11 @@ def _validate_session(session: SessionFile) -> None:
             f"Spray density {session.tool_state.spray_density} is outside the "
             f"supported range {MIN_SPRAY_DENSITY}..{MAX_SPRAY_DENSITY}."
         )
+    if not (MIN_LIGHT_STEP <= session.tool_state.light_step <= MAX_LIGHT_STEP):
+        raise SessionLoadError(
+            f"Light step {session.tool_state.light_step} is outside the "
+            f"supported range {MIN_LIGHT_STEP}..{MAX_LIGHT_STEP}."
+        )
 
     for tab in session.tabs:
         if tab.undo.max_history < 1:
@@ -183,6 +190,8 @@ def _apply_shared_state(workspace: PaintWorkspace, session: SessionFile) -> None
         session.tool_state.brush_size,
         session.tool_state.spray_density,
         session.tool_state.normalized,
+        session.tool_state.light_step,
+        session.tool_state.light_accumulate,
     )
     selected_color = Color.parse(session.palette.selected_color)
     workspace.set_pen_color(selected_color)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from pixpop.constants import DEFAULT_LIGHT_ACCUMULATE, DEFAULT_LIGHT_STEP
 from pixpop.tools import get_default_tool_name
 
 DEFAULT_CANVAS_WIDTH = 100
@@ -169,6 +170,8 @@ class ToolState:
     brush_size: int = DEFAULT_BRUSH_SIZE
     spray_density: int = DEFAULT_SPRAY_DENSITY
     normalized: bool = False
+    light_step: int = DEFAULT_LIGHT_STEP
+    light_accumulate: bool = DEFAULT_LIGHT_ACCUMULATE
     extras: dict[str, object] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, object]:
@@ -177,6 +180,8 @@ class ToolState:
             "brush_size": self.brush_size,
             "spray_density": self.spray_density,
             "normalized": self.normalized,
+            "light_step": self.light_step,
+            "light_accumulate": self.light_accumulate,
         }
         if self.extras:
             payload["extras"] = self.extras
@@ -189,12 +194,18 @@ class ToolState:
         brush_size = _coerce_int(raw.get("brush_size"), DEFAULT_BRUSH_SIZE)
         spray_density = _coerce_int(raw.get("spray_density"), DEFAULT_SPRAY_DENSITY)
         normalized = _coerce_bool(raw.get("normalized"), False)
+        light_step = _coerce_int(raw.get("light_step"), DEFAULT_LIGHT_STEP)
+        light_accumulate = _coerce_bool(
+            raw.get("light_accumulate"), DEFAULT_LIGHT_ACCUMULATE
+        )
         extras = _coerce_dict(raw.get("extras"))
         return cls(
             current_tool=current_tool,
             brush_size=brush_size,
             spray_density=spray_density,
             normalized=normalized,
+            light_step=light_step,
+            light_accumulate=light_accumulate,
             extras=extras,
         )
 

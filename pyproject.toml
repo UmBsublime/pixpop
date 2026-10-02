@@ -47,6 +47,7 @@ dependencies = [
     "textual-fspicker>=1.0.1",
     "textual>=8.2.8",
     "textual-canvas>=1.1.0",
+    "textual-slider>=0.1.2",
 ]
 authors = [
     {name = "umbsublime"},

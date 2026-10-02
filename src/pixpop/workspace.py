@@ -23,6 +23,8 @@ from pixpop.screens.rename_dialog import RenameDialog
 from pixpop.state import (
     AppState,
     BrushSizeChanged,
+    LightAccumulateChanged,
+    LightStepChanged,
     NormalizedChanged,
     PenColorChanged,
     SprayDensityChanged,
@@ -41,6 +43,8 @@ from pixpop.widgets import (
     ColorPicker,
     FlipPicker,
     LayerPicker,
+    LightAccumulatePicker,
+    LightStepPicker,
     NormalizedPicker,
     PickerColumn,
     SprayDensityPicker,
@@ -213,17 +217,25 @@ class PaintWorkspace(Static):
         """Apply recent colors without emitting events."""
         self._get_color_picker().set_recent_colors(colors)
 
-    def get_tool_state_values(self) -> tuple[str, int, int, bool]:
+    def get_tool_state_values(self) -> tuple[str, int, int, bool, int, bool]:
         """Return tool state values in order."""
         return (
             self._state.current_tool_name,
             self._state.brush_size,
             self._state.spray_density,
             self._state.normalized,
+            self._state.light_step,
+            self._state.light_accumulate,
         )
 
     def set_tool_state_values(
-        self, current_tool: str, brush_size: int, spray_density: int, normalized: bool
+        self,
+        current_tool: str,
+        brush_size: int,
+        spray_density: int,
+        normalized: bool,
+        light_step: int,
+        light_accumulate: bool,
     ) -> None:
         """Apply shared tool state values."""
         self._state.current_tool_name = current_tool
@@ -231,6 +243,8 @@ class PaintWorkspace(Static):
         self._state.brush_size = max(MIN_BRUSH_SIZE, min(max_size, brush_size))
         self._state.spray_density = spray_density
         self._state.normalized = normalized
+        self._state.light_step = light_step
+        self._state.light_accumulate = light_accumulate
 
     def set_pen_color(self, color: Color) -> None:
         """Apply the shared pen color."""
@@ -269,6 +283,18 @@ class PaintWorkspace(Static):
             f"#{self._scoped_id('spray-density-picker')}", SprayDensityPicker
         )
 
+    def _get_light_step_picker(self) -> LightStepPicker:
+        """Get the light step picker widget for this workspace."""
+        return self.query_one(
+            f"#{self._scoped_id('light-step-picker')}", LightStepPicker
+        )
+
+    def _get_light_accumulate_picker(self) -> LightAccumulatePicker:
+        """Get the light accumulate picker widget for this workspace."""
+        return self.query_one(
+            f"#{self._scoped_id('light-accumulate-picker')}", LightAccumulatePicker
+        )
+
     def _get_layer_picker(self) -> LayerPicker:
         """Get the layer picker widget for this workspace."""
         return self.query_one(f"#{self._scoped_id('layer-picker')}", LayerPicker)
@@ -287,6 +313,12 @@ class PaintWorkspace(Static):
         """Show spray density picker only when spray tool is active."""
         self._get_spray_density_picker().set_visible(tool_name == ToolName.SPRAY)
 
+    def _update_light_visibility(self, tool_name: str) -> None:
+        """Show light step/accumulate pickers only for light/dark tools."""
+        visible = tool_name in (ToolName.LIGHT, ToolName.DARK)
+        self._get_light_step_picker().set_visible(visible)
+        self._get_light_accumulate_picker().set_visible(visible)
+
     def _update_normalized_visibility(self, tool_name: str) -> None:
         """Show normalized toggle only for tools that support it."""
         self._get_normalized_picker().set_visible(tool_name in NORMALIZED_CAPABLE_TOOLS)
@@ -304,6 +336,11 @@ class PaintWorkspace(Static):
         spray = canvas.tools.get(ToolName.SPRAY)
         if spray is not None:
             spray.set_density(self._state.spray_density)
+        for tool_name in (ToolName.LIGHT, ToolName.DARK):
+            tool = canvas.tools.get(tool_name)
+            if tool is not None:
+                tool.set_step(self._state.light_step)
+                tool.set_accumulate(self._state.light_accumulate)
 
     def _apply_state_to_active_canvas(self) -> None:
         """Apply shared tool state to the active canvas."""
@@ -325,9 +362,14 @@ class PaintWorkspace(Static):
             self._state.spray_density, emit=False
         )
         self._get_normalized_picker().set_value(self._state.normalized, emit=False)
+        self._get_light_step_picker().select_step(self._state.light_step, emit=False)
+        self._get_light_accumulate_picker().set_value(
+            self._state.light_accumulate, emit=False
+        )
         self._update_brush_size_visibility(self._state.current_tool_name)
         self._update_spray_density_visibility(self._state.current_tool_name)
         self._update_normalized_visibility(self._state.current_tool_name)
+        self._update_light_visibility(self._state.current_tool_name)
 
     def _sync_ui_from_state(self) -> None:
         """Sync picker UI and visibility from the current state."""
@@ -341,6 +383,8 @@ class PaintWorkspace(Static):
         brush_size: int | None = None,
         spray_density: int | None = None,
         normalized: bool | None = None,
+        light_step: int | None = None,
+        light_accumulate: bool | None = None,
     ) -> None:
         """Update shared tool state and propagate to UI/canvas."""
         if tool_name is not None:
@@ -356,6 +400,10 @@ class PaintWorkspace(Static):
             self._state.spray_density = spray_density
         if normalized is not None:
             self._state.normalized = normalized
+        if light_step is not None:
+            self._state.light_step = light_step
+        if light_accumulate is not None:
+            self._state.light_accumulate = light_accumulate
         self._sync_tool_ui_from_state()
         self._apply_state_to_active_canvas()
 
@@ -482,6 +530,18 @@ class PaintWorkspace(Static):
         if not self._is_event_from_this_workspace(event.sender):
             return
         self._set_tool_state(normalized=event.value)
+
+    def on_light_step_changed(self, event: LightStepChanged) -> None:
+        """Handle light step changes from LightStepPicker."""
+        if not self._is_event_from_this_workspace(event.sender):
+            return
+        self._set_tool_state(light_step=event.value)
+
+    def on_light_accumulate_changed(self, event: LightAccumulateChanged) -> None:
+        """Handle light accumulate toggle changes."""
+        if not self._is_event_from_this_workspace(event.sender):
+            return
+        self._set_tool_state(light_accumulate=event.value)
 
     def on_flip_picker_flip_pressed(self, event: FlipPicker.FlipPressed) -> None:
         """Handle flip actions."""

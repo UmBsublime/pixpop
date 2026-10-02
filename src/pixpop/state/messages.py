@@ -64,3 +64,19 @@ class NormalizedChanged(StateChanged):
     def __init__(self, value: bool, sender: Widget | None = None) -> None:
         super().__init__(sender)
         self.value = value
+
+
+class LightStepChanged(StateChanged):
+    """Message emitted when the light/dark tool lightness step changes."""
+
+    def __init__(self, value: int, sender: Widget | None = None) -> None:
+        super().__init__(sender)
+        self.value = value
+
+
+class LightAccumulateChanged(StateChanged):
+    """Message emitted when the light/dark accumulate toggle changes."""
+
+    def __init__(self, value: bool, sender: Widget | None = None) -> None:
+        super().__init__(sender)
+        self.value = value

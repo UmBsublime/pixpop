@@ -6,11 +6,13 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 
 from pixpop.config import AppConfig
+from pixpop.widgets.accumulate_picker import LightAccumulatePicker
 from pixpop.widgets.brush_picker import BrushSizePicker
 from pixpop.widgets.canvas_info import CanvasInfo
 from pixpop.widgets.color_picker import ColorPicker
 from pixpop.widgets.flip_picker import FlipPicker
 from pixpop.widgets.layer_picker import LayerPicker
+from pixpop.widgets.light_picker import LightStepPicker
 from pixpop.widgets.normalize_picker import NormalizedPicker
 from pixpop.widgets.spray_picker import SprayDensityPicker
 from pixpop.widgets.tool_picker import ToolPicker
@@ -35,6 +37,8 @@ class PickerColumn(Vertical):
         yield ToolPicker(workspace_id=self._workspace_id)
         yield BrushSizePicker(workspace_id=self._workspace_id)
         yield SprayDensityPicker(workspace_id=self._workspace_id)
+        yield LightStepPicker(workspace_id=self._workspace_id)
+        yield LightAccumulatePicker(workspace_id=self._workspace_id)
         yield NormalizedPicker(
             workspace_id=self._workspace_id,
             value=self._normalized_value,

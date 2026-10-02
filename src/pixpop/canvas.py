@@ -37,6 +37,8 @@ _ALT_OFFSET_TOOLS = frozenset(
         ToolName.LINE,
         ToolName.CIRCLE,
         ToolName.ELLIPSE,
+        ToolName.LIGHT,
+        ToolName.DARK,
     }
 )
 

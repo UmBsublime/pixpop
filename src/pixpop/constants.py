@@ -17,6 +17,8 @@ class ToolName(StrEnum):
     LINE = "line"
     CIRCLE = "circle"
     ELLIPSE = "ellipse"
+    LIGHT = "light"
+    DARK = "dark"
 
 
 # Mouse buttons as reported by Textual mouse events.
@@ -32,6 +34,12 @@ MAX_BRUSH_SIZE = 5
 MIN_SPRAY_DENSITY = 1
 MAX_SPRAY_DENSITY = 5
 DEFAULT_SPRAY_DENSITY = 3
+
+# Light/dark tool lightness step limits (percent of HSL lightness).
+MIN_LIGHT_STEP = 1
+MAX_LIGHT_STEP = 10
+DEFAULT_LIGHT_STEP = 5
+DEFAULT_LIGHT_ACCUMULATE = True
 
 # Shared overlay redraw rate for brush cursor and shape previews.
 OVERLAY_FPS_LIMIT = 20.0

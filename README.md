@@ -29,7 +29,7 @@ This application is designed to draw in the terminal, which comes with limitatio
 We are able to draw `pixels` (half-characters), but there is no way to know if the mouse is positioned
 on the top or bottom pixel. To work around this, set the pen to brush size 1 (a single pixel) and hold
 `Alt` to offset the cursor down by one pixel — painting the bottom half of the cell under the pointer.
-The `Alt` offset also applies to the cell, eraser, and shape tools.
+The `Alt` offset also applies to the cell, eraser, shape, and light/dark tools.
 
 ## Screenshots
 
@@ -108,3 +108,4 @@ See the [documentation](https://umbsublime.github.io/pixpop/) for details.
 - [textual](https://github.com/Textualize/textual): TUI framework powering the app shell and widgets.
 - [textual-canvas](https://github.com/davep/textual-canvas): Pixel canvas widget used for drawing operations.
 - [textual-fspicker](https://github.com/davep/textual-fspicker): File picker dialogs for save/load flows.
+- [textual-slider](https://github.com/TomJGooding/textual-slider): Slider widget used for the light/dark step control.

@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 
 from textual.color import Color
 
+from pixpop.constants import DEFAULT_LIGHT_ACCUMULATE, DEFAULT_LIGHT_STEP
 from pixpop.tools import get_default_tool_name
 
 DEFAULT_PEN_COLOR = "#d32f2f"
@@ -25,6 +26,8 @@ class AppState:
     spray_density: int = 3
     current_tool_name: str = field(default_factory=get_default_tool_name)
     normalized: bool = False
+    light_step: int = DEFAULT_LIGHT_STEP
+    light_accumulate: bool = DEFAULT_LIGHT_ACCUMULATE
 
     def clone(self) -> AppState:
         """Create a deep copy of the current state."""

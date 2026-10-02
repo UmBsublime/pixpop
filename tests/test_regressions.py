@@ -258,6 +258,54 @@ class TestSessionFileIO:
         undo_pixels = loaded.tabs[0].undo.undo_stack[0].layers[0].pixels
         assert undo_pixels == [(0, 0, "#00FF00")]
 
+    def test_tool_state_light_values_round_trip(self, tmp_path) -> None:
+        session = session_from_dict(
+            {
+                "format": "pixpop-session",
+                "version": 1,
+                "tool_state": {
+                    "current_tool": "light",
+                    "light_step": 8,
+                    "light_accumulate": False,
+                },
+                "tabs": [],
+            }
+        )
+        target = tmp_path / "session.pix"
+        write_session_file(session, target)
+        loaded = load_session_file(target)
+
+        assert loaded.tool_state.current_tool == "light"
+        assert loaded.tool_state.light_step == 8
+        assert loaded.tool_state.light_accumulate is False
+
+    def test_tool_state_light_values_default_for_old_sessions(self) -> None:
+        """Sessions saved before the light tools load with safe defaults."""
+        session = session_from_dict(
+            {
+                "format": "pixpop-session",
+                "version": 1,
+                "tool_state": {"current_tool": "pen"},
+                "tabs": [],
+            }
+        )
+        assert session.tool_state.light_step == 5
+        assert session.tool_state.light_accumulate is True
+
+    def test_light_step_out_of_range_rejected(self) -> None:
+        from pixpop.session.importer import _validate_session
+
+        session = session_from_dict(
+            {
+                "format": "pixpop-session",
+                "version": 1,
+                "tool_state": {"light_step": 99},
+                "tabs": [],
+            }
+        )
+        with pytest.raises(SessionLoadError, match="Light step 99"):
+            _validate_session(session)
+
     def test_write_is_atomic_no_temp_left(self, tmp_path) -> None:
         session = session_from_dict({"format": "pixpop-session", "version": 1})
         target = tmp_path / "s.pix"

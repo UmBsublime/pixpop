@@ -1,6 +1,6 @@
 # Drawing Tools
 
-Pixpop ships with nine tools, selectable from the tool picker or by cycling
+Pixpop ships with eleven tools, selectable from the tool picker or by cycling
 with ++d++ (next) and ++a++ (previous). Hover any tool button to see its
 tooltip.
 
@@ -41,6 +41,22 @@ brush radius.
 ## Fill (paint bucket)
 
 Flood-fills the contiguous region under the cursor with the pen color.
+
+## Light / Dark
+
+Adjust the HSL lightness of already-painted pixels on the active layer:
+**Light** raises it, **Dark** lowers it. Click or drag over painted pixels;
+transparent pixels are left untouched.
+
+- **Brush size:** ++w++ / ++s++, sizes 1–5
+- **Step:** adjustable via the **Light** slider, 1–10 (percent of lightness
+  per application). The value is shared by both tools.
+- **Accumulate:** the **Accumulate** toggle controls what happens when a
+  stroke passes over the same pixel again. **On** (default) re-applies the
+  step each time, so dragging back and forth progressively lightens or
+  darkens; **off** adjusts each pixel at most once per stroke.
+- **Half-cell precision:** hold ++alt++ to offset the cursor down by one
+  pixel, adjusting the bottom half of the cell under the pointer.
 
 ## Eraser
 

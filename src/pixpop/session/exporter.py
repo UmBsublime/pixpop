@@ -42,14 +42,21 @@ def build_session_file(workspace: PaintWorkspace) -> SessionFile:
         selected_color=_color_to_hex(selected_color),
         recent_colors=recent_colors,
     )
-    current_tool, brush_size, spray_density, normalized = (
-        workspace.get_tool_state_values()
-    )
+    (
+        current_tool,
+        brush_size,
+        spray_density,
+        normalized,
+        light_step,
+        light_accumulate,
+    ) = workspace.get_tool_state_values()
     tool_state = ToolState(
         current_tool=current_tool,
         brush_size=brush_size,
         spray_density=spray_density,
         normalized=normalized,
+        light_step=light_step,
+        light_accumulate=light_accumulate,
     )
 
     tab_sessions = [_build_tab_session(pane) for pane in panes]

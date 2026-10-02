@@ -210,6 +210,65 @@ NormalizedPicker {
     }
 }
 
+LightStepPicker {
+    .light-step-row {
+        height: 1;
+    }
+
+    Slider {
+        width: 1fr;
+        height: 1;
+        min-height: 1;
+        border: none;
+        padding: 0;
+        background: transparent;
+
+        & > .slider--slider {
+            background: $panel-darken-2;
+            color: $accent;
+        }
+
+        &:focus {
+            border: none;
+            background-tint: transparent;
+        }
+    }
+
+    .light-step-value {
+        width: 4;
+        padding: 0 1;
+        color: $text;
+        text-align: right;
+    }
+}
+
+LightAccumulatePicker {
+    .accumulate-panel {
+        height: auto;
+    }
+
+    .accumulate-row {
+        height: 1;
+    }
+
+    .accumulate-indicator {
+        max-width: 5;
+        color: $text-muted;
+        background: transparent;
+        border: none;
+        margin: 0 0;
+        padding: 0 1;
+    }
+
+    .accumulate-indicator.-enabled {
+        color: $success;
+    }
+
+    .accumulate-indicator.-disabled {
+        color: $error;
+    }
+}
+
 FlipPicker {
     border-top: double white;
 
