@@ -1,0 +1,271 @@
+/* Custom MkDocs Material color scheme based on the pixpop app's
+ * "twilight-bog" theme (src/pixpop/app.py) and canvas colors
+ * (src/pixpop/config.py).
+ *
+ * App palette:
+ *   primary:    #5d8da2  (muted blue-teal) — header / links / accents
+ *   secondary:  #89baab  (sage green)
+ *   accent:     #a48db6  (lavender)        — hover / active states
+ *   error:      #a66470  (dusty rose)
+ *   success:    #b8cfb9  (pale mint)
+ *   foreground: #e1e6ea  (off-white)       — body text
+ *   surface:    #343943  (dark slate)
+ *   panel:      #4e5a6d  (steel blue-grey)
+ *
+ * Canvas palette:
+ *   background: #2b2b2b  (charcoal)        — body background
+ *   panel:      #313131  (light charcoal)  — code blocks, raised panels
+ */
+
+[data-md-color-scheme="twilight-bog"] {
+  color-scheme: dark;
+
+  /* ---------------------------------------------------------------------
+   * Header & tab bar — showcase the app's teal primary.
+   * ------------------------------------------------------------------ */
+  --md-primary-fg-color: #5d8da2;             /* teal header */
+  --md-primary-fg-color--light: #4e5a6d;      /* mobile nav drawer (steel) */
+  --md-primary-fg-color--dark: #4d7a8d;       /* tab bar slightly darker teal */
+  --md-primary-bg-color: #e1e6ea;             /* off-white text on teal */
+  --md-primary-bg-color--light: #e1e6eab3;
+
+  /* ---------------------------------------------------------------------
+   * Accent — lavender, used for hover/active/focus
+   * ------------------------------------------------------------------ */
+  --md-accent-fg-color: #a48db6;
+  --md-accent-fg-color--transparent: #a48db61a;
+  --md-accent-bg-color: #2b2b2b;
+  --md-accent-bg-color--light: #e1e6eab3;
+
+  /* ---------------------------------------------------------------------
+   * Body — charcoal (the app's canvas background)
+   * ------------------------------------------------------------------ */
+  --md-default-fg-color: #e1e6ea;
+  --md-default-fg-color--light: #e1e6eab3;
+  --md-default-fg-color--lighter: #e1e6ea8a;
+  --md-default-fg-color--lightest: #e1e6ea52;
+  --md-default-bg-color: #2b2b2b;
+  --md-default-bg-color--light: #2b2b2bb3;
+  --md-default-bg-color--lighter: #2b2b2b7a;
+  --md-default-bg-color--lightest: #2b2b2b47;
+
+  /* ---------------------------------------------------------------------
+   * Text & links — brightened teal for AA contrast on charcoal
+   * ------------------------------------------------------------------ */
+  --md-typeset-color: #e1e6ea;
+  --md-typeset-a-color: #8fc3d8;              /* brightened #5d8da2 */
+
+  /* ---------------------------------------------------------------------
+   * Code blocks — lighter charcoal so they read as raised panels
+   * ------------------------------------------------------------------ */
+  --md-code-fg-color: #e1e6ea;
+  --md-code-bg-color: #313131;
+  --md-code-hl-color: #5d8da24d;              /* teal line highlight */
+  --md-code-hl-color--light: #5d8da226;
+
+  /* Syntax highlighting — from the app's bundled palette */
+  --md-code-hl-number-color: #d8725e;
+  --md-code-hl-special-color: #a66470;
+  --md-code-hl-function-color: #89baab;
+  --md-code-hl-constant-color: #a48db6;
+  --md-code-hl-keyword-color: #c57f79;
+  --md-code-hl-string-color: #b8cfb9;
+  --md-code-hl-name-color: #e1e6ea;
+  --md-code-hl-operator-color: #dbc9b4;
+  --md-code-hl-punctuation-color: #9c807e;
+  --md-code-hl-comment-color: #7b6268;
+  --md-code-hl-generic-color: #c3a79c;
+  --md-code-hl-variable-color: #aad795;
+
+  /* ---------------------------------------------------------------------
+   * Admonitions — text must be off-white on the dark charcoal bg;
+   * per-type accent colors come from the app palette below.
+   * ------------------------------------------------------------------ */
+  --md-admonition-fg-color: #e1e6ea;
+  --md-admonition-bg-color: #313131;
+
+  /* ---------------------------------------------------------------------
+   * Footer
+   * ------------------------------------------------------------------ */
+  --md-footer-fg-color: #2b2b2b;
+  --md-footer-fg-color--light: #4e5a6d;
+  --md-footer-fg-color--lighter: #343943;
+  --md-footer-bg-color: #e1e6ea;
+  --md-footer-bg-color--dark: #000000;
+
+  /* ---------------------------------------------------------------------
+   * Misc
+   * ------------------------------------------------------------------ */
+  --md-hue: 205;
+  --md-shadow-z1: 0 0.2rem 0.5rem #00000080;
+  --md-shadow-z2: 0 0.2rem 0.5rem #00000080, 0 0 0.05rem #00000080;
+  --md-shadow-z3: 0 0.2rem 0.5rem #00000080, 0 0 0.05rem #00000080;
+}
+
+/* -------------------------------------------------------------------------
+ * Element-level overrides (no CSS variables exist for these)
+ * ---------------------------------------------------------------------- */
+
+/* Tabs bar — darker teal variant so the teal header stays unified */
+[data-md-color-scheme="twilight-bog"] .md-tabs {
+  background-color: #5d8da2;
+  color: #e1e6ea;
+}
+[data-md-color-scheme="twilight-bog"] .md-tabs__link {
+  color: #e1e6eab3;
+}
+[data-md-color-scheme="twilight-bog"] .md-tabs__link--active,
+[data-md-color-scheme="twilight-bog"] .md-tabs__link:hover {
+  color: #e1e6ea;
+}
+
+/* Header text, search input, and icons on the teal header */
+[data-md-color-scheme="twilight-bog"] .md-header,
+[data-md-color-scheme="twilight-bog"] .md-header__button,
+[data-md-color-scheme="twilight-bog"] .md-header-nav__button {
+  color: #e1e6ea;
+}
+
+/* Site title + logo — showcase the palette's lavender accent */
+[data-md-color-scheme="twilight-bog"] .md-header__title,
+[data-md-color-scheme="twilight-bog"] .md-header__topic,
+[data-md-color-scheme="twilight-bog"] .md-header__button.md-logo {
+  color: #a48db6;
+}
+[data-md-color-scheme="twilight-bog"] .md-header__button.md-logo svg {
+  fill: currentColor;
+}
+[data-md-color-scheme="twilight-bog"] .md-search__input {
+  background-color: #1f171426;
+  color: #e1e6ea;
+}
+[data-md-color-scheme="twilight-bog"] .md-search__input::placeholder {
+  color: #e1e6ea8a;
+}
+[data-md-color-scheme="twilight-bog"] .md-search__input:hover,
+[data-md-color-scheme="twilight-bog"] .md-search__input:focus {
+  background-color: #1f171440;
+}
+
+/* Sidebar navigation (left) */
+[data-md-color-scheme="twilight-bog"] .md-nav__link {
+  color: #e1e6eab3;
+}
+[data-md-color-scheme="twilight-bog"] .md-nav__link:hover,
+[data-md-color-scheme="twilight-bog"] .md-nav__link--active {
+  color: #8fc3d8;
+}
+
+/* TOC (right sidebar) */
+[data-md-color-scheme="twilight-bog"] .md-nav--secondary .md-nav__link {
+  color: #e1e6ea8a;
+}
+[data-md-color-scheme="twilight-bog"] .md-nav--secondary .md-nav__link:hover,
+[data-md-color-scheme="twilight-bog"] .md-nav--secondary .md-nav__link--active {
+  color: #a48db6;
+}
+
+/* Code copy button */
+[data-md-color-scheme="twilight-bog"] .md-clipboard {
+  color: #e1e6ea8a;
+}
+[data-md-color-scheme="twilight-bog"] .md-clipboard:hover {
+  color: #a48db6;
+}
+
+/* Inline `code` */
+[data-md-color-scheme="twilight-bog"] .md-typeset code:not(.highlight code) {
+  background-color: #313131;
+  color: #b8cfb9;
+}
+
+/* Keyboard keys (++) */
+[data-md-color-scheme="twilight-bog"] .md-typeset kbd {
+  background-color: #313131;
+  color: #e1e6ea;
+  border-color: #4e5a6d;
+  box-shadow: 0 0.1rem 0 0.05rem #1f1714;
+}
+
+/* Tables */
+[data-md-color-scheme="twilight-bog"] .md-typeset table:not([class]) th {
+  background-color: #313131;
+  color: #e1e6ea;
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset table:not([class]) td {
+  border-top-color: #4e5a6d;
+}
+
+/* Horizontal rules */
+[data-md-color-scheme="twilight-bog"] .md-typeset hr {
+  border-bottom-color: #4e5a6d;
+}
+
+/* -------------------------------------------------------------------------
+ * Admonitions — fix readability on dark charcoal background.
+ *
+ * Material's default admonition CSS uses hardcoded light-theme accent colors
+ * (`#448aff` etc.) for borders, title backgrounds, and icons. Those don't
+ * pair with our charcoal. We re-tint each type using the app palette.
+ *
+ * Structure: each type sets `--md-admonition-color` which we then use to
+ * style the border, title background, and title icon in one place.
+ * ---------------------------------------------------------------------- */
+
+[data-md-color-scheme="twilight-bog"] .md-typeset .admonition,
+[data-md-color-scheme="twilight-bog"] .md-typeset details {
+  border-color: var(--md-admonition-color, #4e5a6d);
+  color: #e1e6ea;
+}
+
+[data-md-color-scheme="twilight-bog"] .md-typeset .admonition-title,
+[data-md-color-scheme="twilight-bog"] .md-typeset summary {
+  background-color: color-mix(in srgb, var(--md-admonition-color, #4e5a6d) 18%, transparent);
+  color: #e1e6ea;
+}
+
+[data-md-color-scheme="twilight-bog"] .md-typeset .admonition-title::before,
+[data-md-color-scheme="twilight-bog"] .md-typeset summary::before {
+  background-color: var(--md-admonition-color, #4e5a6d);
+}
+
+[data-md-color-scheme="twilight-bog"] .md-typeset .admonition-title:hover,
+[data-md-color-scheme="twilight-bog"] .md-typeset summary:hover {
+  background-color: color-mix(in srgb, var(--md-admonition-color, #4e5a6d) 26%, transparent);
+}
+
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):focus-within {
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--md-admonition-color, #4e5a6d) 20%, transparent);
+}
+
+/* Type-to-palette mapping */
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.note, .info) {
+  --md-admonition-color: #5d8da2;             /* primary teal */
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.tip, .hint, .important) {
+  --md-admonition-color: #89baab;             /* secondary sage */
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.success, .check, .done) {
+  --md-admonition-color: #b8cfb9;             /* success mint */
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.warning, .caution, .attention) {
+  --md-admonition-color: #d8725e;             /* warm orange — replaces muddy olive */
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.danger, .error, .bug) {
+  --md-admonition-color: #a66470;             /* error rose */
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.failure, .fail, .missing) {
+  --md-admonition-color: #c57f79;
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.question, .help, .faq) {
+  --md-admonition-color: #a48db6;             /* accent lavender */
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.abstract, .summary, .tldr) {
+  --md-admonition-color: #a0ddd3;
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.example) {
+  --md-admonition-color: #dbc9b4;
+}
+[data-md-color-scheme="twilight-bog"] .md-typeset :is(.admonition, details):is(.quote, .cite) {
+  --md-admonition-color: #9c807e;
+}
