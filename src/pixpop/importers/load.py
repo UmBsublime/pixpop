@@ -17,6 +17,44 @@ HALF_BLOCK_BOTTOM = "▄"
 MAX_ANSI_ROWS = 2048
 MAX_ANSI_COLUMNS = 4096
 
+# First 16 entries of the xterm 256-color palette (standard + bright).
+_ANSI_16: tuple[str, ...] = (
+    "#000000",
+    "#800000",
+    "#008000",
+    "#808000",
+    "#000080",
+    "#800080",
+    "#008080",
+    "#c0c0c0",
+    "#808080",
+    "#ff0000",
+    "#00ff00",
+    "#ffff00",
+    "#0000ff",
+    "#ff00ff",
+    "#00ffff",
+    "#ffffff",
+)
+
+# 6x6x6 color cube levels used by indices 16..231.
+_ANSI_CUBE_LEVELS: tuple[int, ...] = (0, 95, 135, 175, 215, 255)
+
+
+def _ansi_256_to_hex(index: int) -> str:
+    """Map an xterm 256-color palette index to a #rrggbb hex string."""
+    if index < 16:
+        return _ANSI_16[index]
+    if index < 232:
+        i = index - 16
+        r = _ANSI_CUBE_LEVELS[i // 36]
+        g = _ANSI_CUBE_LEVELS[(i // 6) % 6]
+        b = _ANSI_CUBE_LEVELS[i % 6]
+        return f"#{r:02x}{g:02x}{b:02x}"
+    # 232..255: 24-step grayscale ramp from #080808 to #eeeeee.
+    level = 8 + (index - 232) * 10
+    return f"#{level:02x}{level:02x}{level:02x}"
+
 
 def _read_text_with_fallback(path: Path) -> str:
     """Read text as UTF-8, falling back to CP437 (classic ANSI art encoding)."""
@@ -33,7 +71,9 @@ def load_ascii_alpha(path: Path) -> dict[str, object]:
         path: Input path.
 
     Returns:
-        Mapping with keys: pixels (list of (x, y, Color)), width, height.
+        Mapping with keys: pixels (list of (x, y, Color)), width, height,
+        saw_block_glyph (bool — True if any ▀/▄ was encountered, even when
+        no pixels could be drawn because colors were unrecognized).
 
     Raises:
         ValueError: If the file exceeds row/column limits.
@@ -47,6 +87,7 @@ def load_ascii_alpha(path: Path) -> dict[str, object]:
     pixels: list[tuple[int, int, Color]] = []
     max_x = 0
     max_y = 0
+    saw_block_glyph = False
 
     for row_index, line in enumerate(lines):
         y = row_index * 2
@@ -95,12 +136,31 @@ def load_ascii_alpha(path: Path) -> dict[str, object]:
                         bg = Color.parse(f"#{r:02x}{g:02x}{b:02x}")
                         i += 5
                         continue
+                    if (
+                        code in {"38", "48"}
+                        and i + 2 < len(codes)
+                        and codes[i + 1] == "5"
+                    ):
+                        try:
+                            index = int(codes[i + 2])
+                        except ValueError:
+                            i += 3
+                            continue
+                        if 0 <= index <= 255:
+                            color = Color.parse(_ansi_256_to_hex(index))
+                            if code == "38":
+                                fg = color
+                            else:
+                                bg = color
+                        i += 3
+                        continue
                     i += 1
                 idx = end + 1
                 continue
 
             char = line[idx]
-            if char == "\u2580":
+            if char == "▀":
+                saw_block_glyph = True
                 if fg is not None:
                     pixels.append((x, y, fg))
                     max_x = max(max_x, x + 1)
@@ -109,7 +169,8 @@ def load_ascii_alpha(path: Path) -> dict[str, object]:
                     pixels.append((x, y + 1, bg))
                     max_x = max(max_x, x + 1)
                     max_y = max(max_y, y + 2)
-            elif char == "\u2584":
+            elif char == "▄":
+                saw_block_glyph = True
                 if bg is not None:
                     pixels.append((x, y, bg))
                     max_x = max(max_x, x + 1)
@@ -118,10 +179,22 @@ def load_ascii_alpha(path: Path) -> dict[str, object]:
                     pixels.append((x, y + 1, fg))
                     max_x = max(max_x, x + 1)
                     max_y = max(max_y, y + 2)
+            elif char == "█":
+                saw_block_glyph = True
+                if fg is not None:
+                    pixels.append((x, y, fg))
+                    pixels.append((x, y + 1, fg))
+                    max_x = max(max_x, x + 1)
+                    max_y = max(max_y, y + 2)
             idx += 1
             x += 1
 
-    return {"pixels": pixels, "width": max_x, "height": max_y}
+    return {
+        "pixels": pixels,
+        "width": max_x,
+        "height": max_y,
+        "saw_block_glyph": saw_block_glyph,
+    }
 
 
 def apply_ascii_alpha(canvas: PaintCanvas, path: Path) -> None:
@@ -148,3 +221,13 @@ def apply_ascii_alpha(canvas: PaintCanvas, path: Path) -> None:
 
     if updated:
         canvas.refresh_composite_pixels(updated)
+    elif data.get("saw_block_glyph"):
+        try:
+            canvas.app.notify(
+                f"Loaded 0 pixels from {path.name} — file may use unsupported "
+                "color codes.",
+                title="Load",
+                severity="warning",
+            )
+        except Exception:
+            pass

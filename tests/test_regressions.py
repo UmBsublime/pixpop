@@ -352,6 +352,49 @@ class TestAnsiImport:
         with pytest.raises(ValueError, match="rows"):
             load_ascii_alpha(ans)
 
+    def test_256_color_palette(self, tmp_path) -> None:
+        """SGR 38;5;N / 48;5;N (xterm 256-color) must be parsed."""
+        from pixpop.importers.load import load_ascii_alpha
+
+        ans = tmp_path / "art.ans"
+        # Index 45 = #00d7ff, index 196 = #ff0000 (cube), index 240 = #585858 (gray).
+        ans.write_text(
+            "\x1b[38;5;45m▄\x1b[38;5;196m▄\x1b[38;5;240m▄\x1b[0m\n",
+            encoding="utf-8",
+        )
+        data = load_ascii_alpha(ans)
+        pixels = data["pixels"]
+        assert data["saw_block_glyph"] is True
+        assert len(pixels) == 3
+        # All three are ▄ with no bg set, so fg lands on the bottom pixel (y=1).
+        assert pixels[0] == (0, 1, Color.parse("#00d7ff"))
+        assert pixels[1] == (1, 1, Color.parse("#ff0000"))
+        assert pixels[2] == (2, 1, Color.parse("#585858"))
+
+    def test_saw_block_glyph_false_for_empty(self, tmp_path) -> None:
+        """Plain text files without block glyphs must not trigger the warning."""
+        from pixpop.importers.load import load_ascii_alpha
+
+        ans = tmp_path / "plain.ans"
+        ans.write_text("hello world\n", encoding="utf-8")
+        data = load_ascii_alpha(ans)
+        assert data["pixels"] == []
+        assert data["saw_block_glyph"] is False
+
+    def test_full_block_glyph(self, tmp_path) -> None:
+        """U+2588 (full block) must fill both top and bottom pixels of a cell."""
+        from pixpop.importers.load import load_ascii_alpha
+
+        ans = tmp_path / "art.ans"
+        ans.write_text("\x1b[38;5;45m█\x1b[0m\n", encoding="utf-8")
+        data = load_ascii_alpha(ans)
+        assert data["saw_block_glyph"] is True
+        assert data["pixels"] == [
+            (0, 0, Color.parse("#00d7ff")),
+            (0, 1, Color.parse("#00d7ff")),
+        ]
+        assert data["height"] == 2
+
 
 class TestPngImportGuards:
     def test_corrupt_png_raises_value_error(self, tmp_path) -> None:
