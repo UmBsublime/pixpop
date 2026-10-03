@@ -19,6 +19,7 @@ from pixpop.config import AppConfig
 from pixpop.constants import (
     BUTTON_LEFT,
     BUTTON_RIGHT,
+    DEFAULT_BRUSH_SIZE,
     MIN_BRUSH_SIZE,
     OVERLAY_FPS_LIMIT,
     ToolName,
@@ -151,7 +152,7 @@ class PaintCanvas(Canvas):
         self.drawing = False
         self.erasing = False
         self.pen_color = Color.parse("red")
-        self.brush_size = 1
+        self.brush_size = DEFAULT_BRUSH_SIZE
         self.normalized = False
         # The button driving the current stroke (set on mouse down).
         self._stroke_button = BUTTON_LEFT

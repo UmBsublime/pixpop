@@ -930,7 +930,11 @@ class TestAltCursorOffset:
         from textual.events import MouseDown, MouseUp
 
         from pixpop.canvas import PaintCanvas
-        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+        from tests.snapshot_helpers import (
+            SnapshotPaintApp,
+            select_brush_size,
+            select_tool,
+        )
 
         async def main() -> dict[str, list[tuple[int, int]]]:
             app = SnapshotPaintApp()
@@ -938,7 +942,7 @@ class TestAltCursorOffset:
             async with app.run_test(size=(120, 60)) as pilot:
                 await pilot.pause()
                 canvas = pilot.app.query_one(PaintCanvas)
-                canvas.brush_size = 1
+                await select_brush_size(pilot, 1)
 
                 for tool in ("spray", "paint_bucket"):
                     canvas._layers[0].pixels.clear()

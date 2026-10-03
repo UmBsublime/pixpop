@@ -7,7 +7,7 @@ from textual.containers import Horizontal
 from textual.widgets import Label
 from textual_slider import Slider
 
-from pixpop.constants import MAX_BRUSH_SIZE, MIN_BRUSH_SIZE
+from pixpop.constants import DEFAULT_BRUSH_SIZE, MAX_BRUSH_SIZE, MIN_BRUSH_SIZE
 from pixpop.state import BrushSizeChanged
 from pixpop.widgets.picker_base import PickerBase
 
@@ -21,7 +21,7 @@ class BrushSizePicker(PickerBase):
             picker_id="brush-size-picker",
             title="Brush Size",
         )
-        self.current_size = MIN_BRUSH_SIZE
+        self.current_size = DEFAULT_BRUSH_SIZE
         self._max_size = MAX_BRUSH_SIZE
 
     def compose(self) -> ComposeResult:
@@ -39,8 +39,14 @@ class BrushSizePicker(PickerBase):
         self._get_slider().value = self.current_size
 
     def on_slider_changed(self, event: Slider.Changed) -> None:
-        """Handle slider movements by selecting the new size."""
-        self.select_size(event.value)
+        """Handle slider movements by selecting the new size.
+
+        Only forward user-driven changes: when the slider value already
+        matches the picker's current size, the event is an echo of our own
+        programmatic ``slider.value`` assignment, so ignore it.
+        """
+        if event.value != self.current_size:
+            self.select_size(event.value)
 
     def select_size(self, size: int, emit: bool = True) -> None:
         """Select a brush size programmatically (e.g., from keyboard shortcuts)."""

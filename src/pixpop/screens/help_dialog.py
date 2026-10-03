@@ -83,9 +83,7 @@ def _build_sections() -> list[tuple[str, list[str]]]:
         sections[_section_for(action)].append(f"{key}: {description}")
     # Static note appended to the Drawing section: Alt is a mouse modifier,
     # not a binding, so it can never be generated from the keymap above.
-    sections["Drawing"].append(
-        "Alt+click/drag: Offset cursor down 1px (most tools)"
-    )
+    sections["Drawing"].append("Alt+click/drag: Offset cursor down 1px (most tools)")
     return [(name, lines) for name, lines in sections.items() if lines]
 
 

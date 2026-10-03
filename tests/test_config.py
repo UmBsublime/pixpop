@@ -83,6 +83,40 @@ class TestParseToml:
     def test_explicit_flag_excluded_from_equality(self) -> None:
         assert _parse_toml({"default_canvas_width": 128}) == AppConfig()
 
+    def test_default_brush_size_override(self) -> None:
+        cfg = _parse_toml({"default_brush_size": 4})
+        assert cfg.default_brush_size == 4
+
+    def test_default_brush_size_invalid_falls_back(self) -> None:
+        from pixpop.constants import DEFAULT_BRUSH_SIZE
+
+        assert _parse_toml({"default_brush_size": 0}).default_brush_size == (
+            DEFAULT_BRUSH_SIZE
+        )
+        assert _parse_toml({"default_brush_size": "big"}).default_brush_size == (
+            DEFAULT_BRUSH_SIZE
+        )
+
+    def test_default_brush_size_seeds_workspace(self) -> None:
+        """The configured default brush size is the startup brush size."""
+        import asyncio
+
+        from pixpop.canvas import PaintCanvas
+        from pixpop.widgets import BrushSizePicker
+        from tests.snapshot_helpers import SnapshotPaintApp
+
+        async def main() -> tuple[int, int]:
+            app = SnapshotPaintApp(config=AppConfig(default_brush_size=4))
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                canvas = pilot.app.query_one(PaintCanvas)
+                picker = pilot.app.query_one(BrushSizePicker)
+                return canvas.brush_size, picker.current_size
+
+        canvas_size, picker_size = asyncio.run(main())
+        assert canvas_size == 4
+        assert picker_size == 4
+
 
 class TestLoadConfig:
     """Integration tests for load_config file discovery."""

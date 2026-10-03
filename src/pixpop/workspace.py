@@ -13,6 +13,7 @@ from textual.widgets import Static, TabbedContent, TabPane, Tabs
 from pixpop.canvas import PaintCanvas, clamp_canvas_size
 from pixpop.config import AppConfig
 from pixpop.constants import (
+    MAX_BRUSH_SIZE,
     MIN_BRUSH_SIZE,
     ToolName,
 )
@@ -107,6 +108,11 @@ class PaintWorkspace(Static):
         super().__init__(id=id)
         self._config = config if config is not None else AppConfig()
         self._state = AppState()
+        # Seed the shared brush size from the configured default, clamped to
+        # the global range (per-tool clamping happens on every state sync).
+        self._state.brush_size = max(
+            MIN_BRUSH_SIZE, min(MAX_BRUSH_SIZE, self._config.default_brush_size)
+        )
         self._tab_counter = 0
         self._last_cursor_pos: tuple[int, int] | None = None
         # Default size for new canvases. ``None`` means "fit the available

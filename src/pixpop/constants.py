@@ -29,6 +29,7 @@ BUTTON_RIGHT = 3
 # Brush size limits.
 MIN_BRUSH_SIZE = 1
 MAX_BRUSH_SIZE = 10
+DEFAULT_BRUSH_SIZE = 2
 # Shape tools (line/rectangle/circle/ellipse) get a lower brush size ceiling.
 MAX_SHAPE_BRUSH_SIZE = 5
 

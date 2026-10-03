@@ -7,6 +7,8 @@ import tomllib
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 
+from pixpop.constants import DEFAULT_BRUSH_SIZE
+
 _CONFIG_FILENAME = "pixpop-config.toml"
 _XDG_CONFIG_PATH = Path.home() / ".config" / "pixpop" / "config.toml"
 
@@ -34,6 +36,7 @@ class AppConfig:
     checker_color_b: str = "#313131"
     recent_colors_max: int = 8
     undo_max_entries: int = 50
+    default_brush_size: int = DEFAULT_BRUSH_SIZE
     theme_name: str = "twilight-bog"
     canvas_pan_direction: str = "grab"
     # Whether default_canvas_width/height came from a config file. Excluded

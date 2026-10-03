@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from pixpop.constants import DEFAULT_LIGHT_ACCUMULATE, DEFAULT_LIGHT_STEP
+from pixpop.constants import (
+    DEFAULT_BRUSH_SIZE,
+    DEFAULT_LIGHT_ACCUMULATE,
+    DEFAULT_LIGHT_STEP,
+)
 from pixpop.tools import get_default_tool_name
 
 DEFAULT_CANVAS_WIDTH = 100
@@ -12,7 +16,6 @@ DEFAULT_CANVAS_HEIGHT = 50
 DEFAULT_PALETTE_NAME = "default"
 DEFAULT_SELECTED_COLOR = "#d32f2f"
 DEFAULT_MAX_HISTORY = 50
-DEFAULT_BRUSH_SIZE = 1
 DEFAULT_SPRAY_DENSITY = 3
 SESSION_FORMAT = "pixpop-session"
 SESSION_VERSION = 1

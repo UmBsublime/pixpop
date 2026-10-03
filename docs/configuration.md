@@ -102,6 +102,11 @@ Number of entries kept in the recent colors row. **Default: `8`**
 
 Depth of the per-tab undo/redo history. **Default: `50`**
 
+### default_brush_size
+
+Brush size selected at startup, clamped to the global 1–10 range.
+**Default: `2`**
+
 ## Appearance
 
 ### theme_name
@@ -131,6 +136,7 @@ checker_color_a = "#2b2b2b"
 checker_color_b = "#313131"
 recent_colors_max = 8
 undo_max_entries = 50
+#default_brush_size = 2
 theme_name = "twilight-bog"
 # Options: grab/stick
 canvas_pan_direction = "grab"

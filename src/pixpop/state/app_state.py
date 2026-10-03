@@ -7,7 +7,11 @@ from dataclasses import dataclass, field
 
 from textual.color import Color
 
-from pixpop.constants import DEFAULT_LIGHT_ACCUMULATE, DEFAULT_LIGHT_STEP
+from pixpop.constants import (
+    DEFAULT_BRUSH_SIZE,
+    DEFAULT_LIGHT_ACCUMULATE,
+    DEFAULT_LIGHT_STEP,
+)
 from pixpop.tools import get_default_tool_name
 
 DEFAULT_PEN_COLOR = "#d32f2f"
@@ -22,7 +26,7 @@ class AppState:
     """
 
     pen_color: Color = field(default_factory=lambda: Color.parse(DEFAULT_PEN_COLOR))
-    brush_size: int = 1
+    brush_size: int = DEFAULT_BRUSH_SIZE
     spray_density: int = 3
     current_tool_name: str = field(default_factory=get_default_tool_name)
     normalized: bool = False

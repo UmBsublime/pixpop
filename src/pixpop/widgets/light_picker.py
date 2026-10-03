@@ -42,8 +42,14 @@ class LightStepPicker(PickerBase):
         self._get_slider().value = self.current_step
 
     def on_slider_changed(self, event: Slider.Changed) -> None:
-        """Handle slider movements by selecting the new step."""
-        self.select_step(event.value)
+        """Handle slider movements by selecting the new step.
+
+        Only forward user-driven changes: when the slider value already
+        matches the picker's current step, the event is an echo of our own
+        programmatic ``slider.value`` assignment, so ignore it.
+        """
+        if event.value != self.current_step:
+            self.select_step(event.value)
 
     def select_step(self, step: int, emit: bool = True) -> None:
         """Select a lightness step programmatically."""
