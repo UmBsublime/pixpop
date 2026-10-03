@@ -36,6 +36,11 @@ Smallest allowed canvas dimensions, in pixels. **Default: `4` / `4`**
 <a id="default_canvas_width"></a> <a id="default_canvas_height"></a>
 Dimensions of a new canvas, in pixels. **Default: `128` / `128`**
 
+When either key is set in a config file, new canvases start at this size
+(clamped to the min/max below) instead of fitting the available viewport,
+and the new-tab dialog pre-fills with it. When neither key is set, the
+viewport-fit behavior applies.
+
 ### max_canvas_width / max_canvas_height
 
 <a id="max_canvas_width"></a> <a id="max_canvas_height"></a>

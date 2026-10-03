@@ -10,6 +10,7 @@ from textual.widgets import Footer, Header, Tabs
 
 from pixpop.app import PixPop
 from pixpop.canvas import PaintCanvas
+from pixpop.config import AppConfig
 from pixpop.widgets import (
     BrushSizePicker,
     LayerPicker,
@@ -21,17 +22,24 @@ from pixpop.workspace import PaintWorkspace
 
 
 class SnapshotPaintApp(PixPop):
-    """Paint app variant with a deterministic header clock."""
+    """Paint app variant with a deterministic header clock.
+
+    Unlike the real app, tests never read config files: without an explicit
+    config the app uses built-in defaults, keeping tests hermetic.
+    """
 
     CSS_PATH = str(
         (Path(__file__).resolve().parents[1] / "src/pixpop/styles/main.tcss")
     )
 
+    def __init__(self, config: AppConfig | None = None) -> None:
+        super().__init__(config if config is not None else AppConfig())
+
     def compose(self) -> ComposeResult:
         """Create the main application layout with a stable header."""
         yield Header(show_clock=False)
         with Vertical():
-            yield PaintWorkspace()
+            yield PaintWorkspace(config=self._config)
         yield Footer()
 
 

@@ -112,8 +112,16 @@ class PaintWorkspace(Static):
         # Default size for new canvases. ``None`` means "fit the available
         # viewport" (clamped to the configured min/max); a user-chosen size
         # from the new-tab dialog replaces it and is remembered in memory
-        # for the rest of the session.
-        self._next_canvas_size: tuple[int, int] | None = None
+        # for the rest of the session. When the config file defines
+        # default_canvas_width/height, that size wins over the viewport fit.
+        if self._config.has_explicit_default_canvas_size:
+            self._next_canvas_size: tuple[int, int] | None = clamp_canvas_size(
+                self._config,
+                self._config.default_canvas_width,
+                self._config.default_canvas_height,
+            )
+        else:
+            self._next_canvas_size = None
         # Assign unique ID for this workspace instance
         PaintWorkspace._counter += 1
         self._workspace_id = f"ws-{PaintWorkspace._counter}-{uuid.uuid4().hex[:8]}"
@@ -585,8 +593,9 @@ class PaintWorkspace(Static):
     ) -> TabPane:
         """Create a new tab with a PaintCanvas and label.
 
-        When no size is given, the canvas uses the remembered new-tab size,
-        or fits itself to the viewport on mount if none was chosen yet.
+        When no size is given, the canvas uses the remembered new-tab size
+        (seeded from the configured default size when set), or fits itself
+        to the viewport on mount if none was chosen yet.
         """
         self._tab_counter += 1
         tab_id = f"canvas-{self._tab_counter}-{self._workspace_id}"
@@ -619,9 +628,10 @@ class PaintWorkspace(Static):
     def _dialog_default_size(self) -> tuple[int, int]:
         """Size to pre-fill in the new-tab dialog.
 
-        Uses the remembered user choice when there is one; otherwise the
-        current viewport's available space, clamped to the configured
-        min/max, so the default creates a canvas with no scrollbars.
+        Uses the remembered user choice (or the configured default size)
+        when there is one; otherwise the current viewport's available
+        space, clamped to the configured min/max, so the default creates
+        a canvas with no scrollbars.
         """
         if self._next_canvas_size is not None:
             return self._next_canvas_size

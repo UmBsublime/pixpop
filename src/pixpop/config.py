@@ -36,6 +36,18 @@ class AppConfig:
     undo_max_entries: int = 50
     theme_name: str = "twilight-bog"
     canvas_pan_direction: str = "grab"
+    # Whether default_canvas_width/height came from a config file. Excluded
+    # from equality so parsed configs still compare equal to defaults.
+    _default_canvas_size_explicit: bool = field(default=False, compare=False)
+
+    @property
+    def has_explicit_default_canvas_size(self) -> bool:
+        """Whether the user configured a default canvas size.
+
+        When True, new canvases start at default_canvas_width/height
+        instead of fitting the available viewport.
+        """
+        return self._default_canvas_size_explicit
 
 
 def _coerce_int(value: object, fallback: int) -> int:
@@ -76,7 +88,12 @@ def _parse_toml(data: dict[str, object]) -> AppConfig:
     }
     color_fields = {"background_color", "checker_color_a", "checker_color_b"}
 
+    if "default_canvas_width" in data or "default_canvas_height" in data:
+        kwargs["_default_canvas_size_explicit"] = True
+
     for f in fields(AppConfig):
+        if f.name.startswith("_"):
+            continue
         raw = data.get(f.name)
         if raw is None:
             continue

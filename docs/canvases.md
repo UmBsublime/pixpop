@@ -33,8 +33,12 @@ the space gesture, since tmux's default bindings capture Ctrl+click.) See
 the gesture direction.
 
 By default a new canvas fills the available space, so no scrollbars are
-needed. Pressing ++t++ opens a dialog asking for the new canvas's width
-and height, pre-filled with that available size (or your last chosen size
+needed — unless
+[`default_canvas_width`](configuration.md#default_canvas_width) /
+[`default_canvas_height`](configuration.md#default_canvas_height) are set
+in the config file, in which case new canvases start at that size instead.
+Pressing ++t++ opens a dialog asking for the new canvas's width
+and height, pre-filled with that starting size (or your last chosen size
 from the same session), so repeatedly creating same-sized canvases is a
 single ++enter++ away.
 
@@ -47,8 +51,8 @@ Default and limit sizes are configurable:
 - [`max_canvas_width`](configuration.md#max_canvas_width) /
   [`max_canvas_height`](configuration.md#max_canvas_height)
 
-The viewport-fit default is clamped between the configured min and max
-sizes.
+The starting size — viewport-fit or configured default — is clamped
+between the configured min and max sizes.
 
 A canvas smaller than the visible area is centered in its tab; the space
 around it shows the panel background. Centering follows the window size, so

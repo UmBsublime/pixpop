@@ -8,6 +8,7 @@ from math import ceil
 import pytest
 
 from pixpop.canvas import PaintCanvas
+from pixpop.config import _parse_toml
 from pixpop.screens.new_tab_dialog import NewTabDialog
 from pixpop.workspace import PaintWorkspace
 from tests.snapshot_helpers import SnapshotPaintApp
@@ -380,6 +381,66 @@ def test_draw_at_scrolled_position() -> None:
             return hit, miss
 
     assert asyncio.run(main()) == (True, True)
+
+
+def test_startup_canvas_uses_explicit_config_default() -> None:
+    """A configured default canvas size wins over the viewport fit."""
+
+    async def main() -> tuple[bool, bool, tuple[int, int]]:
+        config = _parse_toml({"default_canvas_width": 64, "default_canvas_height": 48})
+        app = SnapshotPaintApp(config=config)
+        async with app.run_test(size=(120, 60)) as pilot:
+            # Past the 0.1s fit timer: it must not resize the canvas.
+            await asyncio.sleep(0.2)
+            await pilot.pause()
+            canvas = pilot.app.query_one(PaintCanvas)
+            return (
+                canvas.show_horizontal_scrollbar,
+                canvas.show_vertical_scrollbar,
+                (canvas.width, canvas.height),
+            )
+
+    h_scroll, v_scroll, canvas_size = asyncio.run(main())
+    assert not h_scroll and not v_scroll
+    assert canvas_size == (64, 48)
+
+
+def test_explicit_config_default_is_clamped_to_max() -> None:
+    """A configured default beyond the max clamps to the configured max."""
+
+    async def main() -> tuple[int, int]:
+        config = _parse_toml(
+            {"default_canvas_width": 2000, "default_canvas_height": 2000}
+        )
+        app = SnapshotPaintApp(config=config)
+        async with app.run_test(size=(120, 60)) as pilot:
+            await asyncio.sleep(0.2)
+            await pilot.pause()
+            canvas = pilot.app.query_one(PaintCanvas)
+            return canvas.width, canvas.height
+
+    assert asyncio.run(main()) == (1024, 1024)
+
+
+def test_new_tab_dialog_prefills_explicit_config_default() -> None:
+    """With a configured default size, the dialog pre-fills with it."""
+
+    async def main() -> tuple[str, str]:
+        config = _parse_toml({"default_canvas_width": 64, "default_canvas_height": 48})
+        app = SnapshotPaintApp(config=config)
+        async with app.run_test(size=(120, 60)) as pilot:
+            await pilot.pause()
+            ws = pilot.app.query_one(PaintWorkspace)
+            ws.action_new_tab()
+            await pilot.pause()
+            dialog = pilot.app.screen
+            assert isinstance(dialog, NewTabDialog)
+            return (
+                dialog.query_one("#width-input").value,
+                dialog.query_one("#height-input").value,
+            )
+
+    assert asyncio.run(main()) == ("64", "48")
 
 
 def test_session_size_survives_pending_fit_timer() -> None:

@@ -64,6 +64,25 @@ class TestParseToml:
         cfg = _parse_toml({"canvas_pan_direction": "GRAB"})
         assert cfg.canvas_pan_direction == "grab"
 
+    def test_default_canvas_size_not_explicit_by_default(self) -> None:
+        assert not AppConfig().has_explicit_default_canvas_size
+        assert not _parse_toml({}).has_explicit_default_canvas_size
+
+    def test_default_canvas_size_explicit_when_width_set(self) -> None:
+        cfg = _parse_toml({"default_canvas_width": 200})
+        assert cfg.has_explicit_default_canvas_size
+        assert cfg.default_canvas_width == 200
+        assert cfg.default_canvas_height == 128
+
+    def test_default_canvas_size_explicit_when_height_set(self) -> None:
+        cfg = _parse_toml({"default_canvas_height": 96})
+        assert cfg.has_explicit_default_canvas_size
+        assert cfg.default_canvas_width == 128
+        assert cfg.default_canvas_height == 96
+
+    def test_explicit_flag_excluded_from_equality(self) -> None:
+        assert _parse_toml({"default_canvas_width": 128}) == AppConfig()
+
 
 class TestLoadConfig:
     """Integration tests for load_config file discovery."""
