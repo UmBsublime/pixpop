@@ -6,7 +6,7 @@ import random
 import pytest
 
 from pixpop.canvas import PaintCanvas
-from pixpop.widgets import CanvasTabs, ColorPicker
+from pixpop.widgets import CanvasTabs, PalettePicker
 from pixpop.workspace import PaintWorkspace
 from tests.snapshot_helpers import (
     SnapshotPaintApp,
@@ -34,7 +34,7 @@ def test_functional_house_drawing_snapshot(snap_compare, monkeypatch) -> None:
     async def run_before(pilot) -> None:
         await pilot.pause()
         canvas = pilot.app.query_one(PaintCanvas)
-        color_picker = pilot.app.query_one(ColorPicker)
+        color_picker = pilot.app.query_one(PalettePicker)
 
         rename_active_tab(pilot, "ai_house")
         rename_active_layer(pilot, "main_layer")

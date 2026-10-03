@@ -39,3 +39,10 @@ actually uses. The row size is set by
 Press ++i++ to sample the color under the cursor — an eyedropper for pulling
 a color straight out of your artwork instead of hunting for it in the
 palette.
+
+## The color picker dialog
+
+Press ++p++ to open a full color picker (hue/saturation/value sliders plus
+RGB, HSV, and hex inputs) in a modal dialog. It opens on the current pen
+color; press ++enter++ to apply the picked color or ++escape++ to cancel.
+Confirmed colors are added to the recent colors row.

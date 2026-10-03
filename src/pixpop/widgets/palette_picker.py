@@ -1,4 +1,4 @@
-"""Color picker widget with color swatches."""
+"""Palette picker widget with color swatches."""
 
 from __future__ import annotations
 
@@ -43,8 +43,12 @@ class ColorSwatch(SelectableButtonBase):
         self.post_message(self.Selected(self.color_name, self.color))
 
 
-class ColorPicker(PickerBase):
-    """Color selection widget with palette swatches and recent colors."""
+class PalettePicker(PickerBase):
+    """Palette selection widget with palette swatches and recent colors.
+
+    Named PalettePicker (not ColorPicker) to avoid a CSS type-selector
+    collision with textual_colorpicker.ColorPicker used by the picker modal.
+    """
 
     def __init__(
         self,

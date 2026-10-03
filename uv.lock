@@ -734,6 +734,7 @@ dependencies = [
     { name = "pillow" },
     { name = "textual" },
     { name = "textual-canvas" },
+    { name = "textual-colorpicker" },
     { name = "textual-fspicker" },
     { name = "textual-slider" },
 ]
@@ -754,6 +755,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=12.3.0" },
     { name = "textual", specifier = ">=8.2.8" },
     { name = "textual-canvas", specifier = ">=1.1.0" },
+    { name = "textual-colorpicker", specifier = ">=0.1.0" },
     { name = "textual-fspicker", specifier = ">=1.0.1" },
     { name = "textual-slider", specifier = ">=0.1.2" },
 ]
@@ -1081,6 +1083,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/37/7e/f2c65b73f8a795a2ed9fbc65667a80db46b1e85799001e63de9869b7a53d/textual_canvas-1.1.0.tar.gz", hash = "sha256:cad9ad99901db25a94e91f7a1b9e14d7db0638c0cb38979a13db13eef1af0ab4", size = 7329, upload-time = "2025-10-02T15:09:21.603Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/51/ec/adf15c678f3c373dc781555f112f9f8d5b8b5f8b6b7f28b89b4ef89d440f/textual_canvas-1.1.0-py3-none-any.whl", hash = "sha256:fc7a938011c165f1a189fbae4f2e688d68c1fc3276a9111691a8b96514ffede0", size = 8393, upload-time = "2025-10-02T15:09:20.016Z" },
+]
+
+[[package]]
+name = "textual-colorpicker"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "textual" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a2/5e/deda4214e6bddb9c779d3a805f2021cdea74499a1f646d8bf64e84c15461/textual_colorpicker-0.1.0.tar.gz", hash = "sha256:c2996b0e486c0cbad24963522adf708e8e182776c0f7da0884cbed894a382966", size = 21870, upload-time = "2025-06-22T10:12:43.251Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/5e/e6f4341c7ae01f2a79e083be242aa2040d09c22435e0f94e3e3770dca14b/textual_colorpicker-0.1.0-py3-none-any.whl", hash = "sha256:7d034b789eb5954a7aafb725f81815d83c90a42cfa80a4c4a0cb698f34f4ed18", size = 23259, upload-time = "2025-06-22T10:12:41.709Z" },
 ]
 
 [[package]]

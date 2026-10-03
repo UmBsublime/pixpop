@@ -1,0 +1,22 @@
+ColorPickerDialog {
+    align: center middle;
+
+    #color-picker-dialog {
+        width: auto;
+        height: auto;
+        padding: 1 2;
+        border: round $primary;
+        background: $panel;
+    }
+
+    #color-picker-title {
+        text-style: bold;
+        margin-bottom: 1;
+    }
+
+    #color-picker-hint {
+        width: auto;
+        margin-top: 1;
+        color: $text-muted;
+    }
+}

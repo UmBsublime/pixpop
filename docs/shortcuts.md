@@ -47,6 +47,7 @@ generated from the live keymap, so it always matches your version.
 | ++w++ | Increase brush size |
 | ++s++ | Decrease brush size |
 | ++i++ | Pick color (eyedropper) |
+| ++p++ | Open color picker modal |
 
 ## Canvas
 

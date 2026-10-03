@@ -18,6 +18,7 @@ from pixpop.constants import (
     ToolName,
 )
 from pixpop.names import get_adjective_noun_name
+from pixpop.screens.color_picker_dialog import ColorPickerDialog
 from pixpop.screens.help_dialog import HelpDialog
 from pixpop.screens.new_tab_dialog import NewTabDialog
 from pixpop.screens.rename_dialog import RenameDialog
@@ -41,12 +42,12 @@ from pixpop.widgets import (
     BrushSizePicker,
     CanvasInfo,
     CanvasTabs,
-    ColorPicker,
     FlipPicker,
     LayerPicker,
     LightAccumulatePicker,
     LightStepPicker,
     NormalizedPicker,
+    PalettePicker,
     PickerColumn,
     SprayDensityPicker,
     ToolPicker,
@@ -79,6 +80,7 @@ class PaintWorkspace(Static):
         Binding("w", "increase_brush_size", "Increase Brush", False),
         Binding("s", "decrease_brush_size", "Decrease Brush", False),
         Binding("i", "pick_color", "Pick Color", False),
+        Binding("p", "open_color_picker", "Color Picker", False),
         Binding("ctrl+s", "save_canvas", "Save Canvas", False),
         Binding("ctrl+e", "export_canvas", "Export Canvas", False),
         Binding("ctrl+o", "load_canvas", "Load Canvas", False),
@@ -287,9 +289,9 @@ class PaintWorkspace(Static):
             f"#{self._scoped_id('brush-size-picker')}", BrushSizePicker
         )
 
-    def _get_color_picker(self) -> ColorPicker:
+    def _get_color_picker(self) -> PalettePicker:
         """Get the color picker widget for this workspace."""
-        return self.query_one(f"#{self._scoped_id('color-picker')}", ColorPicker)
+        return self.query_one(f"#{self._scoped_id('color-picker')}", PalettePicker)
 
     def _get_spray_density_picker(self) -> SprayDensityPicker:
         """Get the spray density picker widget for this workspace."""
@@ -515,7 +517,7 @@ class PaintWorkspace(Static):
         self._get_canvas_info().update_canvas_size(event.width, event.height)
 
     def on_pen_color_changed(self, event: PenColorChanged) -> None:
-        """Handle pen color change events from ColorPicker."""
+        """Handle pen color change events from PalettePicker."""
         if not self._is_event_from_this_workspace(event.sender):
             return
         self._state.pen_color = event.color
@@ -804,6 +806,30 @@ class PaintWorkspace(Static):
                 cx, cy = canvas.cursor_pos
                 if canvas.is_valid_position(cx, cy):
                     canvas.update_cursor(cx, cy)
+
+    def action_open_color_picker(self) -> None:
+        """Open the color picker modal, defaulting to the current pen color."""
+
+        def handle_color(color: Color | None) -> None:
+            if color is None:
+                return
+            self._state.pen_color = color
+            self._sync_ui_from_state()
+            self._get_color_picker().add_recent_color(color)
+            self._apply_state_to_active_canvas()
+
+            # Redraw cursor with new color for instant visual feedback
+            canvas = self._get_canvas()
+            canvas.hide_cursor()
+            if canvas.cursor_pos is not None:
+                cx, cy = canvas.cursor_pos
+                if canvas.is_valid_position(cx, cy):
+                    canvas.update_cursor(cx, cy)
+
+        self.app.push_screen(
+            ColorPickerDialog(self._state.pen_color),
+            handle_color,
+        )
 
     def action_save_canvas(self) -> None:
         """Open save dialog for the active canvas."""

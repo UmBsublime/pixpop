@@ -4,11 +4,11 @@ from pixpop.widgets.accumulate_picker import LightAccumulatePicker
 from pixpop.widgets.brush_picker import BrushSizePicker
 from pixpop.widgets.canvas_info import CanvasInfo
 from pixpop.widgets.canvas_tabs import CanvasTabs
-from pixpop.widgets.color_picker import ColorPicker, ColorSwatch
 from pixpop.widgets.flip_picker import FlipPicker
 from pixpop.widgets.layer_picker import LayerPicker
 from pixpop.widgets.light_picker import LightStepPicker
 from pixpop.widgets.normalize_picker import NormalizedPicker
+from pixpop.widgets.palette_picker import ColorSwatch, PalettePicker
 from pixpop.widgets.picker_base import PickerBase
 from pixpop.widgets.picker_column import PickerColumn
 from pixpop.widgets.selectable_button_base import SelectableButtonBase
@@ -20,13 +20,13 @@ __all__ = [
     "BrushSizePicker",
     "CanvasInfo",
     "CanvasTabs",
-    "ColorPicker",
     "ColorSwatch",
     "FlipPicker",
     "LayerPicker",
     "LightAccumulatePicker",
     "LightStepPicker",
     "NormalizedPicker",
+    "PalettePicker",
     "PickerBase",
     "PickerColumn",
     "SelectableButtonBase",

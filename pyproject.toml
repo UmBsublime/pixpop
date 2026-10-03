@@ -44,6 +44,7 @@ license = {text = "MIT"}
 license-files = ["LICENSE"]
 dependencies = [
     "pillow>=12.3.0",
+    "textual-colorpicker>=0.1.0",
     "textual-fspicker>=1.0.1",
     "textual>=8.2.8",
     "textual-canvas>=1.1.0",
