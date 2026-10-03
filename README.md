@@ -23,13 +23,18 @@ I mainly use it now to create fun images to spice up my terminal MOTD via [jests
 - Undo-redo stack
 - Help screen and tooltips
 
-## Caveats
+## Usage
 
-This application is designed to draw in the terminal, which comes with limitations.
-We are able to draw `pixels` (half-characters), but there is no way to know if the mouse is positioned
-on the top or bottom pixel. To work around this, set the pen to brush size 1 (a single pixel) and hold
-`Alt` to offset the cursor down by one pixel — painting the bottom half of the cell under the pointer.
-The `Alt` offset also applies to the cell, eraser, shape, and light/dark tools.
+```bash
+pixpop
+```
+
+- Draw with the mouse (see [Caveats](#caveats) for single-pixel drawing)
+- Press `?` for the help screen and full keybindings
+- `Ctrl+S` to save, `Ctrl+E` to export, `Ctrl+O` to load (`.ans`, `.png`, `.pix`)
+- Try to `cat` your .ans file in the terminal
+
+See the [documentation](https://umbsublime.github.io/pixpop/) for details.
 
 ## Screenshots
 
@@ -39,20 +44,6 @@ The `Alt` offset also applies to the cell, eraser, shape, and light/dark tools.
     <td><img src="https://raw.githubusercontent.com/UmBsublime/pixpop/main/screenshots/help.png" alt="Pixpop help dialog"></td>
   </tr>
 </table>
-
-## Pixpop session format (.pix)
-
-Pixpop supports saving and loading full sessions as `.pix` files. These are
-gzipped JSON files that capture:
-
-- Tabs (canvas names and order)
-- Canvas size per tab
-- Layers, visibility, and pixel data
-- Undo/redo stacks per tab
-- Shared tool state and palette selection
-
-The `.pix` format is intended for restoring a working session rather than
-exporting artwork. For artwork exports, use PNG or ASCII.
 
 ## Installation
 
@@ -90,18 +81,27 @@ uv sync
 uv run pixpop
 ```
 
-## Usage
+## Pixpop session format (.pix)
 
-```bash
-pixpop
-```
+Pixpop supports saving and loading full sessions as `.pix` files. These are
+gzipped JSON files that capture:
 
-- Draw with the mouse (see [Caveats](#caveats) for single-pixel drawing)
-- Press `?` for the help screen and full keybindings
-- `Ctrl+S` to save, `Ctrl+E` to export, `Ctrl+O` to load (`.ans`, `.png`, `.pix`)
-- Try to `cat` your .ans file in the terminal
+- Tabs (canvas names and order)
+- Canvas size per tab
+- Layers, visibility, and pixel data
+- Undo/redo stacks per tab
+- Shared tool state and palette selection
 
-See the [documentation](https://umbsublime.github.io/pixpop/) for details.
+The `.pix` format is intended for restoring a working session rather than
+exporting artwork. For artwork exports, use PNG or ASCII.
+
+## Caveats
+
+This application is designed to draw in the terminal, which comes with limitations.
+We are able to draw `pixels` (half-characters), but there is no way to know if the mouse is positioned
+on the top or bottom pixel. To work around this, set the pen to brush size 1 (a single pixel) and hold
+`Alt` to offset the cursor down by one pixel — painting the bottom half of the cell under the pointer.
+The `Alt` offset also applies to the cell, eraser, shape, and light/dark tools.
 
 ## Powered by
 
