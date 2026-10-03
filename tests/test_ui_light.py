@@ -229,10 +229,10 @@ class TestLightPickerVisibility:
             async with app.run_test(size=(120, 60)) as pilot:
                 await pilot.pause()
                 await select_tool(pilot, "light")
-                app.query_one(LightAccumulatePicker).set_value(False)
+                app.query_one(LightAccumulatePicker).set_value(True)
                 await pilot.pause()
                 canvas = app.query_one(PaintCanvas)
-                assert canvas.tools["light"].accumulate is False
-                assert canvas.tools["dark"].accumulate is False
+                assert canvas.tools["light"].accumulate is True
+                assert canvas.tools["dark"].accumulate is True
 
         asyncio.run(main())

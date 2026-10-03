@@ -41,7 +41,7 @@ DEFAULT_SPRAY_DENSITY = 3
 MIN_LIGHT_STEP = 1
 MAX_LIGHT_STEP = 10
 DEFAULT_LIGHT_STEP = 5
-DEFAULT_LIGHT_ACCUMULATE = True
+DEFAULT_LIGHT_ACCUMULATE = False
 
 # Shared overlay redraw rate for brush cursor and shape previews.
 OVERLAY_FPS_LIMIT = 20.0

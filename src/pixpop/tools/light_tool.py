@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pixpop.constants import (
     BUTTON_LEFT,
+    DEFAULT_LIGHT_ACCUMULATE,
     DEFAULT_LIGHT_STEP,
     MAX_LIGHT_STEP,
     MIN_LIGHT_STEP,
@@ -25,7 +26,7 @@ class LightnessTool(Tool):
 
     def __init__(self) -> None:
         self.step = DEFAULT_LIGHT_STEP
-        self.accumulate = True
+        self.accumulate = DEFAULT_LIGHT_ACCUMULATE
         self._stroke_pixels: set[tuple[int, int]] = set()
 
     def on_mouse_down(

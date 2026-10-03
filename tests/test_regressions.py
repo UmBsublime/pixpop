@@ -290,7 +290,7 @@ class TestSessionFileIO:
             }
         )
         assert session.tool_state.light_step == 5
-        assert session.tool_state.light_accumulate is True
+        assert session.tool_state.light_accumulate is False
 
     def test_light_step_out_of_range_rejected(self) -> None:
         from pixpop.session.importer import _validate_session
