@@ -150,18 +150,34 @@ CanvasInfo {
 BrushSizePicker {
     border-top: double white;
 
-    .brush-grid {
-        height: auto;
-        grid-size: 5;
+    .brush-size-row {
+        height: 1;
     }
-}
 
-BrushSizePicker .value-button {
-    width: auto;
-    padding: 0 2;
-    color: $text;
-    &.-selected {
-        background: $accent;
+    Slider {
+        width: 1fr;
+        height: 1;
+        min-height: 1;
+        border: none;
+        padding: 0;
+        background: transparent;
+
+        & > .slider--slider {
+            background: $panel-darken-2;
+            color: $accent;
+        }
+
+        &:focus {
+            border: none;
+            background-tint: transparent;
+        }
+    }
+
+    .brush-size-value {
+        width: 4;
+        padding: 0 1;
+        color: $text;
+        text-align: right;
     }
 }
 

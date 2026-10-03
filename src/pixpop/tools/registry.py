@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from pixpop.constants import MAX_BRUSH_SIZE
+from pixpop.constants import MAX_BRUSH_SIZE, MAX_SHAPE_BRUSH_SIZE
 from pixpop.tools.base import Tool
 from pixpop.tools.cell import CellTool
 from pixpop.tools.circle import CircleTool
@@ -84,6 +84,7 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         "Rect",
         "Draw a rectangle.\n\nAlt: offset cursor down 1px",
         RectangleTool,
+        max_brush_size=MAX_SHAPE_BRUSH_SIZE,
     ),
     ToolDefinition(
         "line",
@@ -91,6 +92,7 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         "Draw a straight line.\n\nAlt: offset cursor down 1px",
         LineTool,
         supports_normalized=True,
+        max_brush_size=MAX_SHAPE_BRUSH_SIZE,
     ),
     ToolDefinition(
         "circle",
@@ -98,6 +100,7 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         "Draw a circle.\n\nAlt: offset cursor down 1px",
         CircleTool,
         supports_normalized=True,
+        max_brush_size=MAX_SHAPE_BRUSH_SIZE,
     ),
     ToolDefinition(
         "ellipse",
@@ -105,6 +108,7 @@ _REGISTERED_TOOLS: tuple[ToolDefinition, ...] = (
         "Draw an ellipse.\n\nAlt: offset cursor down 1px",
         EllipseTool,
         supports_normalized=True,
+        max_brush_size=MAX_SHAPE_BRUSH_SIZE,
     ),
 )
 

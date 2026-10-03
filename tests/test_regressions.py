@@ -561,16 +561,16 @@ class TestSessionApply:
 
 
 class TestPerToolBrushSizeLimits:
-    """Brush size limits: every tool supports sizes 1-5."""
+    """Brush size limits: drawing tools 1-10, shape tools 1-5."""
 
     def test_registry_max_brush_size_per_tool(self) -> None:
         from pixpop.tools.registry import get_max_brush_size
 
-        assert get_max_brush_size("pen") == 5
-        assert get_max_brush_size("eraser") == 5
-        assert get_max_brush_size("spray") == 5
+        assert get_max_brush_size("pen") == 10
+        assert get_max_brush_size("eraser") == 10
+        assert get_max_brush_size("spray") == 10
+        assert get_max_brush_size("paint_bucket") == 10
         assert get_max_brush_size("line") == 5
-        assert get_max_brush_size("paint_bucket") == 5
         assert get_max_brush_size("rectangle") == 5
         assert get_max_brush_size("circle") == 5
         assert get_max_brush_size("ellipse") == 5
@@ -582,7 +582,7 @@ class TestPerToolBrushSizeLimits:
         assert get_max_brush_size("no-such-tool") == MAX_BRUSH_SIZE
 
     def test_tool_switch_keeps_shared_brush_size(self) -> None:
-        """Pen at size 5 -> switch to ellipse -> size 5 is kept (no cap)."""
+        """Pen at size 5 -> switch to ellipse -> size 5 is kept (within cap)."""
         import asyncio
 
         from pixpop.workspace import PaintWorkspace
@@ -601,8 +601,31 @@ class TestPerToolBrushSizeLimits:
 
         assert asyncio.run(main()) == 5
 
-    def test_keyboard_increase_reaches_max_for_shape_tools(self) -> None:
-        """'w' reaches 5 for shape tools as well as the pen."""
+    def test_tool_switch_clamps_to_shape_tool_max(self) -> None:
+        """Pen at size 10 -> switch to ellipse -> size clamps to 5 and stays."""
+        import asyncio
+
+        from pixpop.workspace import PaintWorkspace
+        from tests.snapshot_helpers import SnapshotPaintApp, select_tool
+
+        async def main() -> tuple[int, int]:
+            app = SnapshotPaintApp()
+            async with app.run_test(size=(120, 60)) as pilot:
+                await pilot.pause()
+                ws = pilot.app.query_one(PaintWorkspace)
+                await select_tool(pilot, "pen")
+                ws._set_tool_state(brush_size=10)
+                await select_tool(pilot, "ellipse")
+                clamped = ws._state.brush_size
+                await select_tool(pilot, "pen")
+                return clamped, ws._state.brush_size
+
+        clamped, back_on_pen = asyncio.run(main())
+        assert clamped == 5
+        assert back_on_pen == 5
+
+    def test_keyboard_increase_reaches_per_tool_max(self) -> None:
+        """'w' reaches 5 for shape tools and 10 for the pen."""
         import asyncio
 
         from pixpop.workspace import PaintWorkspace
@@ -615,43 +638,46 @@ class TestPerToolBrushSizeLimits:
                 ws = pilot.app.query_one(PaintWorkspace)
 
                 await select_tool(pilot, "ellipse")
-                for _ in range(10):
+                for _ in range(12):
                     ws.action_increase_brush_size()
                 ellipse_max = ws._state.brush_size
 
                 await select_tool(pilot, "pen")
-                for _ in range(10):
+                for _ in range(12):
                     ws.action_increase_brush_size()
                 pen_max = ws._state.brush_size
                 return ellipse_max, pen_max
 
         ellipse_max, pen_max = asyncio.run(main())
         assert ellipse_max == 5
-        assert pen_max == 5
+        assert pen_max == 10
 
-    def test_picker_shows_all_sizes_for_shape_tools(self) -> None:
-        """All five size buttons shown for shape tools and the pen."""
+    def test_picker_slider_max_follows_active_tool(self) -> None:
+        """The slider max is 5 for shape tools and 10 for drawing tools."""
         import asyncio
+
+        from textual_slider import Slider
 
         from pixpop.widgets import BrushSizePicker
         from tests.snapshot_helpers import SnapshotPaintApp, select_tool
 
-        async def main() -> tuple[list[bool], list[bool]]:
+        async def main() -> tuple[int, int]:
             app = SnapshotPaintApp()
             async with app.run_test(size=(120, 60)) as pilot:
                 await pilot.pause()
                 picker = pilot.app.query_one(BrushSizePicker)
+                slider = picker.query_one(Slider)
 
                 await select_tool(pilot, "rectangle")
-                shape_display = [b.display for b in picker._buttons]
+                shape_max = slider.max
 
                 await select_tool(pilot, "pen")
-                pen_display = [b.display for b in picker._buttons]
-                return shape_display, pen_display
+                pen_max = slider.max
+                return shape_max, pen_max
 
-        shape_display, pen_display = asyncio.run(main())
-        assert shape_display == [True] * 5
-        assert pen_display == [True] * 5
+        shape_max, pen_max = asyncio.run(main())
+        assert shape_max == 5
+        assert pen_max == 10
 
     def test_session_with_shape_tool_and_size_5_kept_on_apply(self) -> None:
         """Legacy .pix: active ellipse + brush_size 5 -> kept (max is 5)."""
